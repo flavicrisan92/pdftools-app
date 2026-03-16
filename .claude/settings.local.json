@@ -21,7 +21,10 @@
       "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" repo create pdftools-app --public --description \"PDF Tools - Merge, Split, Compress, Convert PDFs. Built with React + Vite.\" --source \"C:/Users/flavi/source/repos/app1\" --remote origin --push)",
       "Bash(\"/c/Program Files \\(x86\\)/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" auth login --no-launch-browser)",
       "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" auth login --no-launch-browser)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(npx cap init:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx cap add android)"
     ]
   }
 }
