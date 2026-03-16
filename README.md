@@ -1,73 +1,280 @@
-# React + TypeScript + Vite
+# PDF Tools SaaS
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+O aplicatie PDF Tools (clone Smallpdf/iLovePDF) pentru Web, Android si iOS cu un singur codebase.
 
-Currently, two official plugins are available:
+**Live URLs:**
+- Production: https://pdftools-prod.web.app
+- Staging: https://pdftools-staging.web.app
+- GitHub: https://github.com/flavicrisan92/pdftools-app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Status Proiect
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Completat
 
-## Expanding the ESLint configuration
+| Task | Status | Detalii |
+|------|--------|---------|
+| Setup React + Vite + TypeScript | Done | Proiect initializat |
+| Tailwind CSS v4 | Done | Cu @tailwindcss/postcss |
+| Firebase Setup | Done | 2 proiecte: staging + prod |
+| PDF Merge | Done | src/lib/pdf/merge.ts |
+| PDF Split | Done | src/lib/pdf/split.ts |
+| PDF Compress | Done | src/lib/pdf/compress.ts |
+| PDF to Images | Done | src/lib/pdf/convert.ts |
+| UI Components | Done | FileDropzone, Button, etc. |
+| Pages | Done | Home, MergePdf, SplitPdf, CompressPdf, ConvertPdf |
+| Capacitor Android | Done | android/ folder generat |
+| Firebase Hosting | Done | Deploy pe ambele environments |
+| GitHub Repo | Done | Push initial complet |
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### In Progress / TODO
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| Task | Prioritate | Detalii |
+|------|------------|---------|
+| Firebase Auth | HIGH | Google + Email login |
+| Usage Tracking | HIGH | Firestore - 3 ops/zi free |
+| Stripe Integration | HIGH | Payments pentru Pro |
+| Pricing Page | MEDIUM | UI pentru planuri |
+| Login/Account Pages | MEDIUM | UI pentru auth |
+| Premium Feature Gating | MEDIUM | Limita operatii, file size |
+| Android APK Build | MEDIUM | Capacitor build |
+| iOS Build | LOW | Necesita Mac |
+| SEO Optimization | LOW | Meta tags, sitemap |
+| Google Ads Setup | LOW | Marketing |
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Stack Tehnologic
+
+| Component | Tehnologie |
+|-----------|------------|
+| Framework | React 18 + Vite 6 |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 |
+| PDF Processing | pdf-lib + pdfjs-dist |
+| Cross-platform | Capacitor 7 |
+| Auth | Firebase Auth |
+| Database | Firebase Firestore |
+| Payments | Stripe |
+| Hosting | Firebase Hosting |
+
+---
+
+## Structura Proiect
+
+```
+app1/
+├── src/
+│   ├── components/
+│   │   └── ui/
+│   │       ├── Button.tsx
+│   │       └── FileDropzone.tsx
+│   ├── lib/
+│   │   ├── pdf/
+│   │   │   ├── merge.ts
+│   │   │   ├── split.ts
+│   │   │   ├── compress.ts
+│   │   │   └── convert.ts
+│   │   └── firebase.ts
+│   ├── pages/
+│   │   ├── Home.tsx
+│   │   ├── MergePdf.tsx
+│   │   ├── SplitPdf.tsx
+│   │   ├── CompressPdf.tsx
+│   │   └── ConvertPdf.tsx
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── android/                 # Capacitor Android
+├── public/
+├── .env.staging
+├── .env.production
+├── firebase.json
+├── .firebaserc
+├── capacitor.config.ts
+├── vite.config.ts
+├── tailwind.config.js
+├── postcss.config.js
+└── package.json
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Firebase Projects
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Environment | Project ID | Web App |
+|-------------|------------|---------|
+| Staging | pdftools-staging | pdftools-staging-web |
+| Production | pdftools-prod | pdftools-prod-web |
+
+### Firebase Config (din .env files)
+
+```env
+# Staging
+VITE_FIREBASE_API_KEY=AIzaSyCeqWTe8Rt61QEg4hg7rAlbWypORcnKylk
+VITE_FIREBASE_PROJECT_ID=pdftools-staging
+
+# Production
+VITE_FIREBASE_API_KEY=AIzaSyDjxjGe9uyGt3kNjcuJxbmLLPOm2aK0x8E
+VITE_FIREBASE_PROJECT_ID=pdftools-prod
 ```
+
+---
+
+## Comenzi Utile
+
+```bash
+# Development
+npm run dev                    # Start local server (port 5173/5174)
+
+# Build
+npm run build                  # Build pentru production
+
+# Firebase Deploy
+npm run build && firebase deploy --only hosting -P staging      # Deploy staging
+npm run build && firebase deploy --only hosting -P production   # Deploy prod
+
+# Capacitor
+npx cap sync android           # Sync web -> Android
+npx cap open android           # Deschide Android Studio
+npx cap run android            # Run pe emulator/device
+
+# Git
+git add . && git commit -m "message" && git push
+```
+
+---
+
+## Monetizare
+
+### Pricing Tiers
+
+| Plan | Pret | Features |
+|------|------|----------|
+| Free | $0 | 3 ops/zi, max 10MB, watermark |
+| Pro Monthly | $7.99/luna | Unlimited, 100MB, no watermark |
+| Pro Annual | $49.99/an | Same, 48% savings |
+| Lifetime | $149 | One-time, limited |
+
+### Revenue Target
+
+- 1,000 users x 5% conversion x $7.99 = **$400/luna**
+- 10,000 users x 5% conversion x $7.99 = **$4,000/luna**
+- 25,000 users x 5% conversion x $7.99 = **$10,000/luna** (TARGET)
+
+---
+
+## Pasii Urmatori (in ordine)
+
+### 1. Firebase Auth (Prioritate: HIGH)
+
+```typescript
+// src/lib/firebase.ts - de adaugat
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+
+export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
+export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
+```
+
+Fisiere de creat/modificat:
+- `src/hooks/useAuth.ts` - Auth hook
+- `src/pages/Login.tsx` - Login page (exista, de completat)
+- `src/pages/Account.tsx` - Account page
+- `src/components/AuthGuard.tsx` - Protected routes
+
+### 2. Usage Tracking (Prioritate: HIGH)
+
+```typescript
+// Firestore schema
+interface User {
+  uid: string;
+  email: string;
+  plan: 'free' | 'pro' | 'lifetime';
+  operationsToday: number;
+  lastOperationDate: string;
+  stripeCustomerId?: string;
+}
+```
+
+Fisiere de creat:
+- `src/lib/usage.ts` - Track & check usage
+- `src/hooks/useUsage.ts` - Usage hook
+
+### 3. Stripe Integration (Prioritate: HIGH)
+
+```bash
+npm install @stripe/stripe-js
+```
+
+Fisiere de creat:
+- `src/lib/stripe.ts` - Stripe config
+- `src/pages/Pricing.tsx` - Pricing page cu checkout
+- Firebase Functions pentru webhook-uri (optional)
+
+### 4. Premium Feature Gating
+
+Modificari in paginile PDF:
+- Check usage inainte de procesare
+- Show upgrade modal daca limita atinsa
+- File size validation (10MB free, 100MB pro)
+
+### 5. Android Build
+
+```bash
+npm run build
+npx cap sync android
+npx cap open android
+# In Android Studio: Build > Generate Signed Bundle/APK
+```
+
+---
+
+## Probleme Rezolvate
+
+| Problema | Solutie |
+|----------|---------|
+| Tailwind v4 PostCSS error | Instalat @tailwindcss/postcss, actualizat postcss.config.js |
+| react-dropzone Accept import | Folosit `import type { Accept }` |
+| TypeScript Uint8Array error | Folosit `new Blob([new Uint8Array(pdfBytes)])` |
+| pdfjs-dist canvas error | Adaugat `canvas: canvas` in render params |
+| Missing tslib | `npm install tslib` |
+| Cloud Run billing | Folosit Firebase Hosting (gratuit) |
+
+---
+
+## Claude Code Setup
+
+### Chrome MCP (pentru browser automation)
+
+Activat in `~/.claude.json`:
+```json
+{
+  "claudeInChromeDefaultEnabled": true
+}
+```
+
+Permite:
+- Citire console logs din Chrome
+- Click pe elemente
+- Screenshot-uri
+- Navigare automata
+
+---
+
+## Links Utile
+
+- [Firebase Console](https://console.firebase.google.com)
+- [Stripe Dashboard](https://dashboard.stripe.com)
+- [Google Cloud Console](https://console.cloud.google.com)
+- [Capacitor Docs](https://capacitorjs.com/docs)
+- [pdf-lib Docs](https://pdf-lib.js.org)
+
+---
+
+## Contact
+
+- GitHub: [@flavicrisan92](https://github.com/flavicrisan92)
+- Email: flavicrisan92@gmail.com

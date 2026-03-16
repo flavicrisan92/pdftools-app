@@ -113,6 +113,17 @@
 ## Next Steps
 
 1. ✅ Research completat
-2. 🔄 Implementare PDF Tools POC
-3. ⏳ Lansare + validare
-4. ⏳ Dacă nu merge, trecem la QR Generator sau Background Remover
+2. ✅ Implementare PDF Tools MVP (4 tools: merge, split, compress, convert)
+3. ✅ Deploy pe Firebase Hosting (staging + production)
+4. ✅ Setup GitHub repo
+5. ✅ Setup Capacitor pentru Android
+6. 🔄 Firebase Auth + Usage tracking
+7. 🔄 Stripe integration pentru payments
+8. ⏳ Lansare Product Hunt + marketing
+9. ⏳ Dacă nu merge, trecem la QR Generator sau Background Remover
+
+## Links Live
+
+- **Production:** https://pdftools-prod.web.app
+- **Staging:** https://pdftools-staging.web.app
+- **GitHub:** https://github.com/flavicrisan92/pdftools-app
