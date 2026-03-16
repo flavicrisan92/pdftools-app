@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "staging": "pdftools-staging",
+    "production": "pdftools-prod"
+  }
+}

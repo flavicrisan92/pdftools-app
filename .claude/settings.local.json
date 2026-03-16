@@ -24,7 +24,10 @@
       "Bash(git push)",
       "Bash(npx cap init:*)",
       "Bash(npm run build:*)",
-      "Bash(npx cap add android)"
+      "Bash(npx cap add android)",
+      "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" services enable firestore.googleapis.com --project=pdftools-staging)",
+      "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" services enable firestore.googleapis.com --project=pdftools-prod)",
+      "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" services enable run.googleapis.com cloudbuild.googleapis.com --project=pdftools-staging)"
     ]
   }
 }
