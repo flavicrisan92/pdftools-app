@@ -27,7 +27,10 @@
       "Bash(npx cap add android)",
       "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" services enable firestore.googleapis.com --project=pdftools-staging)",
       "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" services enable firestore.googleapis.com --project=pdftools-prod)",
-      "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" services enable run.googleapis.com cloudbuild.googleapis.com --project=pdftools-staging)"
+      "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" services enable run.googleapis.com cloudbuild.googleapis.com --project=pdftools-staging)",
+      "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" billing accounts list)",
+      "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" billing projects link pdftools-staging --billing-account=01CD5D-CE3A63-A88CCA)",
+      "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" billing projects link pdftools-prod --billing-account=01CD5D-CE3A63-A88CCA)"
     ]
   }
 }
