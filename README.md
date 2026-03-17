@@ -28,15 +28,15 @@ O aplicatie PDF Tools (clone Smallpdf/iLovePDF) pentru Web, Android si iOS cu un
 | Firebase Hosting | Done | Deploy pe ambele environments |
 | GitHub Repo | Done | Push initial complet |
 
+| Firebase Auth | Done | Email/Password + Google |
+| CI/CD Pipeline | Done | GitHub Actions |
+
 ### In Progress / TODO
 
 | Task | Prioritate | Detalii |
 |------|------------|---------|
-| Firebase Auth | HIGH | Google + Email login |
 | Usage Tracking | HIGH | Firestore - 3 ops/zi free |
 | Stripe Integration | HIGH | Payments pentru Pro |
-| Pricing Page | MEDIUM | UI pentru planuri |
-| Login/Account Pages | MEDIUM | UI pentru auth |
 | Premium Feature Gating | MEDIUM | Limita operatii, file size |
 | Android APK Build | MEDIUM | Capacitor build |
 | iOS Build | LOW | Necesita Mac |
@@ -122,6 +122,36 @@ VITE_FIREBASE_PROJECT_ID=pdftools-prod
 
 ---
 
+## CI/CD Pipeline
+
+### Deploy Automat
+
+| Trigger | Environment | Descriere |
+|---------|-------------|-----------|
+| Push to `master` | Staging | Deploy automat la fiecare push |
+| Manual (workflow_dispatch) | Production | Selectează tag-ul pentru deploy |
+
+### GitHub Secrets Necesare
+
+```
+FIREBASE_SERVICE_ACCOUNT_STAGING    # Service account JSON pentru staging
+FIREBASE_SERVICE_ACCOUNT_PRODUCTION # Service account JSON pentru production
+```
+
+### Generare Service Account
+
+1. Firebase Console → Project Settings → Service accounts
+2. Click "Generate new private key"
+3. Copiază JSON în GitHub Secrets
+
+### Deploy Production
+
+1. Creează tag: `git tag v1.0.0 && git push origin v1.0.0`
+2. GitHub → Actions → Deploy → Run workflow
+3. Selectează `production` și introdu tag-ul `v1.0.0`
+
+---
+
 ## Comenzi Utile
 
 ```bash
@@ -131,7 +161,7 @@ npm run dev                    # Start local server (port 5173/5174)
 # Build
 npm run build                  # Build pentru production
 
-# Firebase Deploy
+# Deploy Manual (fără CI/CD)
 npm run build && firebase deploy --only hosting -P staging      # Deploy staging
 npm run build && firebase deploy --only hosting -P production   # Deploy prod
 
@@ -142,6 +172,11 @@ npx cap run android            # Run pe emulator/device
 
 # Git
 git add . && git commit -m "message" && git push
+
+# Tags
+git tag v1.0.0                 # Creează tag
+git push origin v1.0.0         # Push tag
+git tag -l                     # Lista taguri
 ```
 
 ---
