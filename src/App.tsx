@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
@@ -11,6 +12,7 @@ import { Login } from './pages/Login';
 
 function App() {
   return (
+    <AuthProvider>
     <BrowserRouter>
       <div className="min-h-screen flex flex-col bg-gray-50">
         <Header />
@@ -28,6 +30,7 @@ function App() {
         <Footer />
       </div>
     </BrowserRouter>
+    </AuthProvider>
   );
 }
 

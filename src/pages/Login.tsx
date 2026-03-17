@@ -1,24 +1,51 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
-import { FileText } from 'lucide-react';
+import { FileText, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Login() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isRegister, setIsRegister] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, error, clearError } = useAuth();
+  const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    // TODO: Implement Google login with Firebase
-    console.log('Google login');
-    setIsLoading(false);
+    try {
+      await signInWithGoogle();
+      navigate('/');
+    } catch {
+      // Error is handled by AuthContext
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // TODO: Implement email magic link with Firebase
-    console.log('Email login:', email);
-    setIsLoading(false);
+    try {
+      if (isRegister) {
+        await signUpWithEmail(email, password);
+      } else {
+        await signInWithEmail(email, password);
+      }
+      navigate('/');
+    } catch {
+      // Error is handled by AuthContext
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleMode = () => {
+    setIsRegister(!isRegister);
+    clearError();
   };
 
   return (
@@ -26,11 +53,21 @@ export function Login() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <FileText className="w-12 h-12 text-primary-600 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
-          <p className="text-gray-600 mt-2">Sign in to access your account</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isRegister ? 'Create an account' : 'Welcome back'}
+          </h1>
+          <p className="text-gray-600 mt-2">
+            {isRegister ? 'Sign up to get started' : 'Sign in to access your account'}
+          </p>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-8">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
           <button
             onClick={handleGoogleLogin}
             disabled={isLoading}
@@ -66,29 +103,68 @@ export function Login() {
             </div>
           </div>
 
-          <form onSubmit={handleEmailLogin}>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email address
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              required
-            />
+          <form onSubmit={handleEmailSubmit}>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent pr-12"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <Button
               type="submit"
-              disabled={isLoading || !email}
-              className="w-full mt-4"
+              disabled={isLoading || !email || !password}
+              className="w-full mt-6"
               size="lg"
             >
-              Send Magic Link
+              {isLoading ? 'Please wait...' : isRegister ? 'Create Account' : 'Sign In'}
             </Button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-sm text-gray-600 mt-6">
+            {isRegister ? 'Already have an account?' : "Don't have an account?"}{' '}
+            <button
+              onClick={toggleMode}
+              className="text-primary-600 hover:underline font-medium"
+            >
+              {isRegister ? 'Sign in' : 'Sign up'}
+            </button>
+          </p>
+
+          <p className="text-center text-sm text-gray-500 mt-4">
             By signing in, you agree to our{' '}
             <a href="#" className="text-primary-600 hover:underline">
               Terms of Service
