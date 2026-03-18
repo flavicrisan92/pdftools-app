@@ -1,18 +1,22 @@
 import { useState } from 'react';
 import { FileDropzone } from '../components/ui/FileDropzone';
 import { Button } from '../components/ui/Button';
+import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { compressPdf, formatFileSize, calculateCompressionRatio } from '../lib/pdf/compress';
 import { downloadPdf } from '../lib/pdf/merge';
+import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download } from 'lucide-react';
-
-type Quality = 'low' | 'medium' | 'high';
+import { FREE_LIMIT } from '../types/user';
 
 export function CompressPdf() {
   const [files, setFiles] = useState<File[]>([]);
-  const [quality, setQuality] = useState<Quality>('medium');
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<Uint8Array | null>(null);
   const [stats, setStats] = useState<{ original: number; compressed: number } | null>(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [usageCount, setUsageCount] = useState(0);
+
+  const { checkUsage, recordUsage } = useUsage();
 
   const handleFilesSelected = (newFiles: File[]) => {
     setFiles(newFiles.slice(0, 1));
@@ -29,14 +33,23 @@ export function CompressPdf() {
   const handleCompress = async () => {
     if (files.length === 0) return;
 
+    // Check usage limit
+    const usageStats = await checkUsage();
+    if (!usageStats.canPerform) {
+      setUsageCount(usageStats.operationsToday);
+      setShowLimitModal(true);
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      const compressed = await compressPdf(files[0], { quality });
+      const compressed = await compressPdf(files[0], { quality: 'medium' });
       setResult(compressed);
       setStats({
         original: files[0].size,
         compressed: compressed.length,
       });
+      await recordUsage();
     } catch (error) {
       console.error('Error compressing PDF:', error);
       alert('Error compressing PDF. Please try again.');
@@ -67,74 +80,70 @@ export function CompressPdf() {
         />
 
         {files.length > 0 && (
-          <div className="mt-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Compression Level
-            </label>
-            <div className="flex gap-4">
-              {(['low', 'medium', 'high'] as Quality[]).map((q) => (
-                <button
-                  key={q}
-                  onClick={() => setQuality(q)}
-                  className={`flex-1 py-3 px-4 rounded-lg border-2 transition-colors ${
-                    quality === q
-                      ? 'border-primary-500 bg-primary-50 text-primary-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="font-medium capitalize">{q}</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {q === 'low' && 'Smaller file, lower quality'}
-                    {q === 'medium' && 'Balanced'}
-                    {q === 'high' && 'Better quality, larger file'}
-                  </div>
-                </button>
-              ))}
-            </div>
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Compression:</strong> Removes metadata and optimizes PDF structure.
+              Works best on PDFs with embedded images or unoptimized content.
+            </p>
           </div>
         )}
 
-        {stats && (
-          <div className="mt-6 p-4 bg-green-50 rounded-lg">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-600">Original: {formatFileSize(stats.original)}</p>
-                <p className="text-sm text-gray-600">Compressed: {formatFileSize(stats.compressed)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-green-600">
-                  -{calculateCompressionRatio(stats.original, stats.compressed)}%
-                </p>
-                <p className="text-sm text-gray-500">reduction</p>
+        {stats && (() => {
+          const ratio = calculateCompressionRatio(stats.original, stats.compressed);
+          const isSmaller = ratio > 0;
+          return (
+            <div className={`mt-6 p-4 rounded-lg ${isSmaller ? 'bg-green-50' : 'bg-yellow-50'}`}>
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-gray-600">Original: {formatFileSize(stats.original)}</p>
+                  <p className="text-sm text-gray-600">Compressed: {formatFileSize(stats.compressed)}</p>
+                </div>
+                <div className="text-right">
+                  <p className={`text-2xl font-bold ${isSmaller ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {isSmaller ? `-${ratio}%` : `+${Math.abs(ratio)}%`}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {isSmaller ? 'smaller' : 'larger (already optimized)'}
+                  </p>
+                </div>
               </div>
             </div>
+          );
+        })()}
+
+        {files.length > 0 && (
+          <div className="mt-6 flex justify-center gap-4">
+            {!result ? (
+              <Button
+                onClick={handleCompress}
+                disabled={isProcessing}
+                size="lg"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Compressing...
+                  </>
+                ) : (
+                  'Compress PDF'
+                )}
+              </Button>
+            ) : (
+              <Button onClick={handleDownload} size="lg">
+                <Download className="w-5 h-5 mr-2" />
+                Download Compressed PDF
+              </Button>
+            )}
           </div>
         )}
-
-        <div className="mt-6 flex justify-center gap-4">
-          {!result ? (
-            <Button
-              onClick={handleCompress}
-              disabled={files.length === 0 || isProcessing}
-              size="lg"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Compressing...
-                </>
-              ) : (
-                'Compress PDF'
-              )}
-            </Button>
-          ) : (
-            <Button onClick={handleDownload} size="lg">
-              <Download className="w-5 h-5 mr-2" />
-              Download Compressed PDF
-            </Button>
-          )}
-        </div>
       </div>
+
+      <UsageLimitModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        used={usageCount}
+        limit={FREE_LIMIT}
+      />
     </div>
   );
 }

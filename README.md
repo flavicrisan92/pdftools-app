@@ -30,14 +30,14 @@ O aplicatie PDF Tools (clone Smallpdf/iLovePDF) pentru Web, Android si iOS cu un
 
 | Firebase Auth | Done | Email/Password + Google |
 | CI/CD Pipeline | Done | GitHub Actions |
+| Usage Tracking | Done | FingerprintJS + Firestore |
 
 ### In Progress / TODO
 
 | Task | Prioritate | Detalii |
 |------|------------|---------|
-| Usage Tracking | HIGH | Firestore - 3 ops/zi free |
 | Stripe Integration | HIGH | Payments pentru Pro |
-| Premium Feature Gating | MEDIUM | Limita operatii, file size |
+| Premium Feature Gating | MEDIUM | File size limit (10MB free, 100MB pro) |
 | Android APK Build | MEDIUM | Capacitor build |
 | iOS Build | LOW | Necesita Mac |
 | SEO Optimization | LOW | Meta tags, sitemap |
@@ -67,35 +67,45 @@ O aplicatie PDF Tools (clone Smallpdf/iLovePDF) pentru Web, Android si iOS cu un
 app1/
 ├── src/
 │   ├── components/
+│   │   ├── layout/
+│   │   │   ├── Header.tsx
+│   │   │   └── Footer.tsx
 │   │   └── ui/
 │   │       ├── Button.tsx
-│   │       └── FileDropzone.tsx
+│   │       ├── FileDropzone.tsx
+│   │       └── UsageLimitModal.tsx    # Modal upgrade
+│   ├── contexts/
+│   │   └── AuthContext.tsx            # Firebase Auth context
+│   ├── hooks/
+│   │   └── useUsage.ts                # Usage tracking hook
 │   ├── lib/
 │   │   ├── pdf/
 │   │   │   ├── merge.ts
 │   │   │   ├── split.ts
 │   │   │   ├── compress.ts
 │   │   │   └── convert.ts
-│   │   └── firebase.ts
+│   │   ├── firebase.ts
+│   │   ├── fingerprint.ts             # FingerprintJS wrapper
+│   │   └── usage.ts                   # Usage tracking logic
 │   ├── pages/
 │   │   ├── Home.tsx
+│   │   ├── Login.tsx
 │   │   ├── MergePdf.tsx
 │   │   ├── SplitPdf.tsx
 │   │   ├── CompressPdf.tsx
 │   │   └── ConvertPdf.tsx
+│   ├── types/
+│   │   └── user.ts                    # User types & constants
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── index.css
 ├── android/                 # Capacitor Android
-├── public/
-├── .env.staging
-├── .env.production
+├── test-pdfs/               # PDF-uri pentru testare
+├── firestore.rules          # Firestore security rules
 ├── firebase.json
 ├── .firebaserc
 ├── capacitor.config.ts
 ├── vite.config.ts
-├── tailwind.config.js
-├── postcss.config.js
 └── package.json
 ```
 
@@ -200,63 +210,94 @@ git tag -l                     # Lista taguri
 
 ---
 
-## Pasii Urmatori (in ordine)
+## Usage Tracking (Implementat)
 
-### 1. Firebase Auth (Prioritate: HIGH)
+### Cum functioneaza
 
-```typescript
-// src/lib/firebase.ts - de adaugat
-import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+| Tip User | Identificare | Storage | Limita |
+|----------|--------------|---------|--------|
+| Anonim | FingerprintJS (browser fingerprint) | Firestore `anonymous_usage/{visitorId}` | 3 ops/zi |
+| Logat (free) | Firebase Auth UID | Firestore `users/{uid}` | 3 ops/zi |
+| Logat (pro) | Firebase Auth UID | Firestore `users/{uid}` | Unlimited |
 
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+### Fisiere
 
-export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
+```
+src/
+├── types/user.ts              # Tipuri: UserPlan, UsageStats, FREE_LIMIT
+├── lib/
+│   ├── fingerprint.ts         # FingerprintJS wrapper - getVisitorId()
+│   └── usage.ts               # Check & increment usage (anonymous + authenticated)
+├── hooks/useUsage.ts          # React hook: checkUsage(), recordUsage()
+└── components/ui/
+    └── UsageLimitModal.tsx    # Modal "Daily Limit Reached" cu upgrade CTA
 ```
 
-Fisiere de creat/modificat:
-- `src/hooks/useAuth.ts` - Auth hook
-- `src/pages/Login.tsx` - Login page (exista, de completat)
-- `src/pages/Account.tsx` - Account page
-- `src/components/AuthGuard.tsx` - Protected routes
-
-### 2. Usage Tracking (Prioritate: HIGH)
+### Firestore Collections
 
 ```typescript
-// Firestore schema
-interface User {
+// Collection: users (pentru useri logati)
+interface UserDocument {
   uid: string;
   email: string;
-  plan: 'free' | 'pro' | 'lifetime';
+  plan: 'free' | 'pro';
+  operationsToday: number;
+  lastOperationDate: string; // YYYY-MM-DD
+  createdAt: Timestamp;
+}
+
+// Collection: anonymous_usage (pentru useri anonimi)
+interface AnonymousUsage {
+  visitorId: string;           // FingerprintJS hash
   operationsToday: number;
   lastOperationDate: string;
-  stripeCustomerId?: string;
+  createdAt: Timestamp;
 }
 ```
 
-Fisiere de creat:
-- `src/lib/usage.ts` - Track & check usage
-- `src/hooks/useUsage.ts` - Usage hook
+### De ce FingerprintJS?
 
-### 3. Stripe Integration (Prioritate: HIGH)
+- localStorage se poate sterge usor → bypass limita
+- FingerprintJS genereaza un ID unic bazat pe ~70 semnale browser
+- Chiar daca userul sterge cookies/localStorage, fingerprint-ul ramane acelasi
+- ~99.5% acuratete
+
+---
+
+## Pasii Urmatori (in ordine)
+
+### 1. Stripe Integration (Prioritate: HIGH)
 
 ```bash
 npm install @stripe/stripe-js
 ```
 
-Fisiere de creat:
-- `src/lib/stripe.ts` - Stripe config
-- `src/pages/Pricing.tsx` - Pricing page cu checkout
-- Firebase Functions pentru webhook-uri (optional)
+**Ce trebuie facut:**
+1. Creare cont Stripe + produse (Pro Monthly $7.99, Pro Annual $49.99)
+2. `src/lib/stripe.ts` - Stripe config cu publishable key
+3. `src/pages/Pricing.tsx` - Pricing page cu checkout buttons
+4. Firebase Cloud Function pentru webhook (payment success → update user.plan)
+5. Update `firestore.rules` pentru webhook
 
-### 4. Premium Feature Gating
+**Flow upgrade:**
+```
+User click "Upgrade" → Stripe Checkout → Payment OK → Webhook →
+Firebase Function → users/{uid}.plan = 'pro' → Unlimited ops
+```
 
-Modificari in paginile PDF:
-- Check usage inainte de procesare
-- Show upgrade modal daca limita atinsa
-- File size validation (10MB free, 100MB pro)
+### 2. Premium Feature Gating (Prioritate: MEDIUM)
 
-### 5. Android Build
+**Deja implementat:**
+- ✅ Limita operatii (3/zi free, unlimited pro)
+- ✅ Modal upgrade la limita atinsa
+- ✅ FingerprintJS pentru tracking anonim
+
+**De adaugat:**
+- [ ] File size limit (10MB free, 100MB pro)
+- [ ] Badge "Pro" in header pentru useri premium
+- [ ] Account page cu subscription status
+
+### 3. Android Build
 
 ```bash
 npm run build

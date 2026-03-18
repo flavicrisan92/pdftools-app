@@ -1,13 +1,20 @@
 import { useState } from 'react';
 import { FileDropzone } from '../components/ui/FileDropzone';
 import { Button } from '../components/ui/Button';
+import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { mergePdfs, downloadPdf } from '../lib/pdf/merge';
+import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download, ArrowUpDown } from 'lucide-react';
+import { FREE_LIMIT } from '../types/user';
 
 export function MergePdf() {
   const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<Uint8Array | null>(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [usageCount, setUsageCount] = useState(0);
+
+  const { checkUsage, recordUsage } = useUsage();
 
   const handleFilesSelected = (newFiles: File[]) => {
     setFiles((prev) => [...prev, ...newFiles]);
@@ -16,6 +23,11 @@ export function MergePdf() {
 
   const handleRemoveFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
+    setResult(null);
+  };
+
+  const handleClearAll = () => {
+    setFiles([]);
     setResult(null);
   };
 
@@ -31,10 +43,19 @@ export function MergePdf() {
   const handleMerge = async () => {
     if (files.length < 2) return;
 
+    // Check usage limit
+    const stats = await checkUsage();
+    if (!stats.canPerform) {
+      setUsageCount(stats.operationsToday);
+      setShowLimitModal(true);
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const mergedPdf = await mergePdfs(files);
       setResult(mergedPdf);
+      await recordUsage();
     } catch (error) {
       console.error('Error merging PDFs:', error);
       alert('Error merging PDFs. Please try again.');
@@ -63,6 +84,7 @@ export function MergePdf() {
           onFilesSelected={handleFilesSelected}
           files={files}
           onRemoveFile={handleRemoveFile}
+          onClearAll={handleClearAll}
           multiple={true}
         />
 
@@ -95,30 +117,39 @@ export function MergePdf() {
           </div>
         )}
 
-        <div className="mt-6 flex justify-center gap-4">
-          {!result ? (
-            <Button
-              onClick={handleMerge}
-              disabled={files.length < 2 || isProcessing}
-              size="lg"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Merging...
-                </>
-              ) : (
-                `Merge ${files.length} PDFs`
-              )}
-            </Button>
-          ) : (
-            <Button onClick={handleDownload} size="lg">
-              <Download className="w-5 h-5 mr-2" />
-              Download Merged PDF
-            </Button>
-          )}
-        </div>
+        {files.length >= 2 && (
+          <div className="mt-6 flex justify-center gap-4">
+            {!result ? (
+              <Button
+                onClick={handleMerge}
+                disabled={isProcessing}
+                size="lg"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Merging...
+                  </>
+                ) : (
+                  `Merge ${files.length} PDFs`
+                )}
+              </Button>
+            ) : (
+              <Button onClick={handleDownload} size="lg">
+                <Download className="w-5 h-5 mr-2" />
+                Download Merged PDF
+              </Button>
+            )}
+          </div>
+        )}
       </div>
+
+      <UsageLimitModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        used={usageCount}
+        limit={FREE_LIMIT}
+      />
     </div>
   );
 }

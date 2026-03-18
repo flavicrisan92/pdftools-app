@@ -7,6 +7,7 @@ interface FileDropzoneProps {
   onFilesSelected: (files: File[]) => void;
   files: File[];
   onRemoveFile: (index: number) => void;
+  onClearAll?: () => void;
   accept?: Accept;
   multiple?: boolean;
   maxSize?: number;
@@ -16,6 +17,7 @@ export function FileDropzone({
   onFilesSelected,
   files,
   onRemoveFile,
+  onClearAll,
   accept = { 'application/pdf': ['.pdf'] },
   multiple = true,
   maxSize = 10 * 1024 * 1024, // 10MB default
@@ -70,6 +72,16 @@ export function FileDropzone({
 
       {files.length > 0 && (
         <div className="mt-4 space-y-2">
+          {onClearAll && files.length > 1 && (
+            <div className="flex justify-end">
+              <button
+                onClick={onClearAll}
+                className="text-sm text-red-600 hover:text-red-700 font-medium"
+              >
+                Clear All
+              </button>
+            </div>
+          )}
           {files.map((file, index) => (
             <div
               key={`${file.name}-${index}`}

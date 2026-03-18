@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { FileDropzone } from '../components/ui/FileDropzone';
 import { Button } from '../components/ui/Button';
+import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { pdfToImages, downloadAllImages } from '../lib/pdf/convert';
+import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download } from 'lucide-react';
+import { FREE_LIMIT } from '../types/user';
 
 type Format = 'png' | 'jpeg';
 
@@ -12,6 +15,10 @@ export function ConvertPdf() {
   const [quality, setQuality] = useState(0.9);
   const [isProcessing, setIsProcessing] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [usageCount, setUsageCount] = useState(0);
+
+  const { checkUsage, recordUsage } = useUsage();
 
   const handleFilesSelected = (newFiles: File[]) => {
     setFiles(newFiles.slice(0, 1));
@@ -26,6 +33,14 @@ export function ConvertPdf() {
   const handleConvert = async () => {
     if (files.length === 0) return;
 
+    // Check usage limit
+    const stats = await checkUsage();
+    if (!stats.canPerform) {
+      setUsageCount(stats.operationsToday);
+      setShowLimitModal(true);
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const convertedImages = await pdfToImages(files[0], {
@@ -34,6 +49,7 @@ export function ConvertPdf() {
         scale: 2,
       });
       setImages(convertedImages);
+      await recordUsage();
     } catch (error) {
       console.error('Error converting PDF:', error);
       alert('Error converting PDF. Please try again.');
@@ -127,30 +143,39 @@ export function ConvertPdf() {
           </div>
         )}
 
-        <div className="mt-6 flex justify-center gap-4">
-          {images.length === 0 ? (
-            <Button
-              onClick={handleConvert}
-              disabled={files.length === 0 || isProcessing}
-              size="lg"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Converting...
-                </>
-              ) : (
-                'Convert to Images'
-              )}
-            </Button>
-          ) : (
-            <Button onClick={handleDownloadAll} size="lg">
-              <Download className="w-5 h-5 mr-2" />
-              Download All Images
-            </Button>
-          )}
-        </div>
+        {files.length > 0 && (
+          <div className="mt-6 flex justify-center gap-4">
+            {images.length === 0 ? (
+              <Button
+                onClick={handleConvert}
+                disabled={isProcessing}
+                size="lg"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Converting...
+                  </>
+                ) : (
+                  'Convert to Images'
+                )}
+              </Button>
+            ) : (
+              <Button onClick={handleDownloadAll} size="lg">
+                <Download className="w-5 h-5 mr-2" />
+                Download All Images
+              </Button>
+            )}
+          </div>
+        )}
       </div>
+
+      <UsageLimitModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        used={usageCount}
+        limit={FREE_LIMIT}
+      />
     </div>
   );
 }

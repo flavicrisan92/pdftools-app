@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { FileDropzone } from '../components/ui/FileDropzone';
 import { Button } from '../components/ui/Button';
+import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { splitPdf, extractAllPages } from '../lib/pdf/split';
 import { downloadPdf } from '../lib/pdf/merge';
+import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download } from 'lucide-react';
+import { FREE_LIMIT } from '../types/user';
 
 export function SplitPdf() {
   const [files, setFiles] = useState<File[]>([]);
@@ -11,9 +14,13 @@ export function SplitPdf() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<Uint8Array | null>(null);
   const [mode, setMode] = useState<'range' | 'all'>('range');
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [usageCount, setUsageCount] = useState(0);
+
+  const { checkUsage, recordUsage } = useUsage();
 
   const handleFilesSelected = (newFiles: File[]) => {
-    setFiles(newFiles.slice(0, 1)); // Only allow one file
+    setFiles(newFiles.slice(0, 1));
     setResult(null);
   };
 
@@ -25,6 +32,14 @@ export function SplitPdf() {
   const handleSplit = async () => {
     if (files.length === 0) return;
 
+    // Check usage limit
+    const stats = await checkUsage();
+    if (!stats.canPerform) {
+      setUsageCount(stats.operationsToday);
+      setShowLimitModal(true);
+      return;
+    }
+
     setIsProcessing(true);
     try {
       if (mode === 'range' && pageRange) {
@@ -32,11 +47,11 @@ export function SplitPdf() {
         setResult(splitResult);
       } else if (mode === 'all') {
         const pages = await extractAllPages(files[0]);
-        // For simplicity, download all as separate files
         pages.forEach((page, index) => {
           downloadPdf(page, `page_${index + 1}.pdf`);
         });
       }
+      await recordUsage();
     } catch (error) {
       console.error('Error splitting PDF:', error);
       alert('Error splitting PDF. Please try again.');
@@ -105,35 +120,42 @@ export function SplitPdf() {
                 />
               </div>
             )}
+
+            <div className="flex justify-center gap-4">
+              {!result ? (
+                <Button
+                  onClick={handleSplit}
+                  disabled={(mode === 'range' && !pageRange) || isProcessing}
+                  size="lg"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : mode === 'all' ? (
+                    'Extract All Pages'
+                  ) : (
+                    'Extract Pages'
+                  )}
+                </Button>
+              ) : (
+                <Button onClick={handleDownload} size="lg">
+                  <Download className="w-5 h-5 mr-2" />
+                  Download Split PDF
+                </Button>
+              )}
+            </div>
           </div>
         )}
-
-        <div className="mt-6 flex justify-center gap-4">
-          {!result ? (
-            <Button
-              onClick={handleSplit}
-              disabled={files.length === 0 || (mode === 'range' && !pageRange) || isProcessing}
-              size="lg"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : mode === 'all' ? (
-                'Extract All Pages'
-              ) : (
-                'Extract Pages'
-              )}
-            </Button>
-          ) : (
-            <Button onClick={handleDownload} size="lg">
-              <Download className="w-5 h-5 mr-2" />
-              Download Split PDF
-            </Button>
-          )}
-        </div>
       </div>
+
+      <UsageLimitModal
+        isOpen={showLimitModal}
+        onClose={() => setShowLimitModal(false)}
+        used={usageCount}
+        limit={FREE_LIMIT}
+      />
     </div>
   );
 }

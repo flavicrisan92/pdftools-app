@@ -30,7 +30,22 @@
       "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" services enable run.googleapis.com cloudbuild.googleapis.com --project=pdftools-staging)",
       "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" billing accounts list)",
       "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" billing projects link pdftools-staging --billing-account=01CD5D-CE3A63-A88CCA)",
-      "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" billing projects link pdftools-prod --billing-account=01CD5D-CE3A63-A88CCA)"
+      "Bash(\"/c/Users/flavi/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd\" billing projects link pdftools-prod --billing-account=01CD5D-CE3A63-A88CCA)",
+      "Bash(ls:*)",
+      "Bash(dir /b C:Usersflavisourcereposapp1*.md)",
+      "Bash(mkdir:*)",
+      "Bash(node test-pdfs/generate-test-pdfs.mjs:*)",
+      "Bash(dir /b /o-d C:UsersflaviDownloads*.pdf)",
+      "Bash(start \"\" \"C:\\\\Users\\\\flavi\\\\Downloads\\\\merged.pdf\")",
+      "Bash(xxd:*)",
+      "Bash(start \"\" \"C:\\\\Users\\\\flavi\\\\Downloads\\\\split.pdf\")",
+      "Bash(start \"\" \"C:\\\\Users\\\\flavi\\\\Downloads\\\\compressed_compress-medium.pdf\")",
+      "Bash(npm run dev:*)",
+      "Bash(start \"\" \"C:\\\\Users\\\\flavi\\\\Downloads\\\\convert-test_page_1.png\")",
+      "Bash(node -e:*)",
+      "Bash(start \"\" \"C:\\\\Users\\\\flavi\\\\source\\\\repos\\\\app1\\\\test-pdfs\\\\test-compressed.pdf\")",
+      "Bash(start \"\" \"C:\\\\Users\\\\flavi\\\\Downloads\\\\compress-test-node.pdf\")",
+      "Bash(find:*)"
     ]
   }
 }

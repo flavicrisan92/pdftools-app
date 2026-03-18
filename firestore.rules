@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - authenticated usage tracking
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == userId
+                    && request.resource.data.plan == 'free';
+      allow update: if request.auth != null
+                    && request.auth.uid == userId
+                    && request.resource.data.plan == resource.data.plan
+                    && request.resource.data.uid == resource.data.uid;
+      allow delete: if false;
+    }
+
+    // Anonymous usage - fingerprint-based tracking
+    match /anonymous_usage/{visitorId} {
+      // Anyone can read/write their own fingerprint document
+      // The visitorId is the fingerprint hash - hard to guess
+      allow read, write: if true;
+    }
+  }
+}
