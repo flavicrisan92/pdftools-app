@@ -1,7 +1,7 @@
 import * as pdfjs from 'pdfjs-dist';
 
-// Set worker source
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Set worker source - use unpkg as fallback CDN
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export interface ConvertOptions {
   format: 'png' | 'jpeg';
