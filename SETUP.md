@@ -220,6 +220,8 @@ src/components/ui/UsageLimitModal.tsx - Modal upgrade
 
 ## CI/CD Pipeline
 
+**IMPORTANT: Folosește ÎNTOTDEAUNA GitHub Actions pentru deploy, NU deploy manual cu Firebase CLI!**
+
 ### Deploy STAGING (Automat)
 
 ```bash
