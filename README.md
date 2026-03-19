@@ -198,15 +198,14 @@ git tag -l                     # Lista taguri
 | Plan | Pret | Features |
 |------|------|----------|
 | Free | $0 | 3 ops/zi, max 10MB, watermark |
-| Pro Monthly | $7.99/luna | Unlimited, 100MB, no watermark |
-| Pro Annual | $49.99/an | Same, 48% savings |
-| Lifetime | $149 | One-time, limited |
+| Pro Monthly | $8.99/luna | Unlimited, 100MB, no watermark |
+| Pro Annual | $59.99/an | Same, 44% savings |
 
 ### Revenue Target
 
-- 1,000 users x 5% conversion x $7.99 = **$400/luna**
-- 10,000 users x 5% conversion x $7.99 = **$4,000/luna**
-- 25,000 users x 5% conversion x $7.99 = **$10,000/luna** (TARGET)
+- 1,000 users x 5% conversion x $8.99 = **$450/luna**
+- 10,000 users x 5% conversion x $8.99 = **$4,500/luna**
+- 25,000 users x 5% conversion x $8.99 = **$11,250/luna** (TARGET)
 
 ---
 

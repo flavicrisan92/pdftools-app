@@ -46,7 +46,7 @@ const plans: Plan[] = [
       'No watermark',
       'Priority processing',
     ],
-    cta: 'Subscribe',
+    cta: 'Get Pro',
     popular: true,
   },
   {
@@ -60,7 +60,7 @@ const plans: Plan[] = [
       `Save ${PRICES.PRO_ANNUAL.savings} vs monthly`,
       'Priority support',
     ],
-    cta: 'Best Value',
+    cta: 'Get Pro',
     popular: false,
   },
 ];

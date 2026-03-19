@@ -2,6 +2,8 @@
 
 Documentatie completa pentru proiectul PDF Tools SaaS.
 
+**Secretele nu sunt stocate aici - le găsești în Stripe Dashboard și Firebase Console.**
+
 ---
 
 ## URLs Live
@@ -11,9 +13,6 @@ Documentatie completa pentru proiectul PDF Tools SaaS.
 | Staging | https://pdftools-staging.web.app | pdftools-staging |
 | Production | https://pdftools-prod.web.app | pdftools-prod |
 | GitHub | https://github.com/flavicrisan92/pdftools-app | - |
-
-> **Nota:** `pdftools.web.app` nu e disponibil (luat de altcineva).
-> Solutie viitoare: custom domain (ex: pdftools.ro, mypdftools.com)
 
 ---
 
@@ -28,9 +27,152 @@ Documentatie completa pentru proiectul PDF Tools SaaS.
 | Cross-platform | Capacitor 7 |
 | Auth | Firebase Auth |
 | Database | Firebase Firestore |
-| Payments | Stripe (TODO) |
+| Payments | Stripe |
 | Hosting | Firebase Hosting |
 | CI/CD | GitHub Actions |
+| Serverless | Firebase Cloud Functions |
+
+---
+
+## Stripe Account
+
+- **Account Name**: SkylineDigi
+- **Account Type**: Personal/Individual
+- **Dashboard**: https://dashboard.stripe.com
+
+---
+
+## API Keys - Stripe
+
+**Locație:** https://dashboard.stripe.com/apikeys
+
+### Test Mode (Sandbox) - pentru Staging
+
+| Key Type | Unde găsești |
+|----------|--------------|
+| Publishable Key | Stripe Dashboard → Developers → API keys (Test mode) |
+| Secret Key | Stripe Dashboard → Developers → API keys (Test mode) |
+
+### Live Mode - pentru Production
+
+| Key Type | Unde găsești |
+|----------|--------------|
+| Publishable Key | Stripe Dashboard → Developers → API keys (Live mode) |
+| Secret Key | Stripe Dashboard → Developers → API keys (Live mode) |
+
+---
+
+## Stripe Products & Prices
+
+### Test Mode Products (Staging)
+
+| Product | Price | Interval | Price ID |
+|---------|-------|----------|----------|
+| Pro Monthly | $8.99 | monthly | `price_1TCnHKETRWjLZJZKPged1vee` |
+| Pro Annual | $59.99 | yearly | `price_1TCnJBETRWjLZJZKkZ2tzFnD` |
+
+### Live Mode Products (Production)
+
+| Product | Price | Interval | Price ID |
+|---------|-------|----------|----------|
+| Pro Monthly | $8.99 | monthly | `price_1TCnQnIJ0dVUq9YhDub6G5xy` |
+| Pro Annual | $59.99 | yearly | `price_1TCnQkIJ0dVUq9YhhGGIGb84` |
+
+---
+
+## Cloud Functions URLs
+
+| Environment | Function | URL |
+|-------------|----------|-----|
+| Staging | createCheckoutSession | https://us-central1-pdftools-staging.cloudfunctions.net/createCheckoutSession |
+| Staging | stripeWebhook | https://us-central1-pdftools-staging.cloudfunctions.net/stripeWebhook |
+| Production | createCheckoutSession | https://us-central1-pdftools-prod.cloudfunctions.net/createCheckoutSession |
+| Production | stripeWebhook | https://us-central1-pdftools-prod.cloudfunctions.net/stripeWebhook |
+
+---
+
+## Firebase Secrets (Secret Manager)
+
+**Cum accesezi secretele:**
+```bash
+firebase functions:secrets:access STRIPE_SECRET_KEY -P staging
+firebase functions:secrets:access STRIPE_WEBHOOK_SECRET -P staging
+```
+
+### Staging (pdftools-staging)
+
+| Secret | Cum setezi |
+|--------|------------|
+| STRIPE_SECRET_KEY | `echo "sk_test_..." \| firebase functions:secrets:set STRIPE_SECRET_KEY -P staging` |
+| STRIPE_WEBHOOK_SECRET | `echo "whsec_..." \| firebase functions:secrets:set STRIPE_WEBHOOK_SECRET -P staging` |
+
+### Production (pdftools-prod)
+
+| Secret | Cum setezi |
+|--------|------------|
+| STRIPE_SECRET_KEY | `echo "sk_live_..." \| firebase functions:secrets:set STRIPE_SECRET_KEY -P production` |
+| STRIPE_WEBHOOK_SECRET | `echo "whsec_..." \| firebase functions:secrets:set STRIPE_WEBHOOK_SECRET -P production` |
+
+### Comenzi pentru Secrets
+
+```bash
+# Verifică secretele existente
+firebase functions:secrets:access STRIPE_SECRET_KEY -P staging
+
+# Setează/actualizează secretele
+echo "sk_test_..." | firebase functions:secrets:set STRIPE_SECRET_KEY -P staging
+echo "whsec_..." | firebase functions:secrets:set STRIPE_WEBHOOK_SECRET -P staging
+
+# List all secrets
+firebase functions:secrets:list -P staging
+```
+
+---
+
+## Environment Variables
+
+### .env.local (Development Local - foloseste Test Mode)
+
+Copiază din `.env.staging` și ajustează dacă e nevoie.
+
+### .env.staging și .env.production
+
+Aceste fișiere sunt deja în repo. Conțin:
+- Firebase config (din Firebase Console → Project Settings)
+- Stripe publishable keys (din Stripe Dashboard → API keys)
+- Stripe price IDs (din Stripe Dashboard → Products)
+
+---
+
+## Setup Stripe Webhooks (TODO)
+
+### Pentru Staging (Test Mode)
+
+1. Stripe Dashboard → Developers → Webhooks → Add endpoint
+2. URL: `https://us-central1-pdftools-staging.cloudfunctions.net/stripeWebhook`
+3. Events to listen:
+   - `checkout.session.completed`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+4. După creare, copiază "Signing secret" (începe cu `whsec_`)
+5. Actualizează în Firebase:
+   ```bash
+   echo "whsec_..." | firebase functions:secrets:set STRIPE_WEBHOOK_SECRET -P staging
+   firebase deploy --only functions -P staging
+   ```
+
+### Pentru Production (Live Mode)
+
+1. Dezactivează Test Mode în Stripe Dashboard
+2. Developers → Webhooks → Add endpoint
+3. URL: `https://us-central1-pdftools-prod.cloudfunctions.net/stripeWebhook`
+4. Events: same as above
+5. Copiază "Signing secret"
+6. Actualizează în Firebase:
+   ```bash
+   echo "whsec_..." | firebase functions:secrets:set STRIPE_WEBHOOK_SECRET -P production
+   firebase deploy --only functions -P production
+   ```
 
 ---
 
@@ -40,8 +182,8 @@ Documentatie completa pentru proiectul PDF Tools SaaS.
 
 | Provider | Staging | Production |
 |----------|---------|------------|
-| Email/Password | ✅ Enabled | ✅ Enabled |
-| Google | ✅ Enabled | ✅ Enabled |
+| Email/Password | Enabled | Enabled |
+| Google | Enabled | Enabled |
 
 ### Fisiere Relevante
 
@@ -52,32 +194,31 @@ src/pages/Login.tsx           - Login/Register UI
 src/components/layout/Header.tsx - User state + logout
 ```
 
+---
+
+## Usage Tracking (FingerprintJS)
+
 ### Cum functioneaza
 
-1. User-ul se poate inregistra cu email/parola sau Google
-2. AuthContext.tsx pastreaza starea user-ului
-3. Header.tsx afiseaza user-ul logat si buton de logout
-4. La refresh, user-ul ramane logat (Firebase persistence)
+| Tip User | Identificare | Storage | Limita |
+|----------|--------------|---------|--------|
+| Anonim | FingerprintJS (browser fingerprint) | Firestore `anonymous_usage/{visitorId}` | 3 ops/zi |
+| Logat (free) | Firebase Auth UID | Firestore `users/{uid}` | 3 ops/zi |
+| Logat (pro) | Firebase Auth UID | Firestore `users/{uid}` | Unlimited |
+
+### Fisiere
+
+```
+src/types/user.ts              - Tipuri: UserPlan, UsageStats, FREE_LIMIT
+src/lib/fingerprint.ts         - FingerprintJS wrapper - getVisitorId()
+src/lib/usage.ts               - Check & increment usage
+src/hooks/useUsage.ts          - React hook: checkUsage(), recordUsage()
+src/components/ui/UsageLimitModal.tsx - Modal upgrade
+```
 
 ---
 
 ## CI/CD Pipeline
-
-### Workflow: `.github/workflows/deploy.yml`
-
-```yaml
-# Trigger automat - push pe master
-on:
-  push:
-    branches: [master]
-
-# Trigger manual - pentru production
-on:
-  workflow_dispatch:
-    inputs:
-      environment: staging | production
-      tag: v1.0.0
-```
 
 ### Deploy STAGING (Automat)
 
@@ -103,109 +244,16 @@ git push origin v1.0.0
 # 4. Environment: production
 # 5. Tag: v1.0.0
 # 6. Click "Run workflow"
-# => Deploy pe pdftools-prod.web.app (2-3 min)
 ```
 
 ---
 
 ## GitHub Secrets
 
-### Secrets Configurate
-
 | Secret Name | Status |
 |-------------|--------|
-| `FIREBASE_SERVICE_ACCOUNT_STAGING` | ✅ Configurat |
-| `FIREBASE_SERVICE_ACCOUNT_PRODUCTION` | ✅ Configurat |
-
-### Cum se genereaza (daca e nevoie sa refaci)
-
-1. Firebase Console → Project Settings → Service accounts
-2. Click "Generate new private key"
-3. Download JSON
-4. GitHub → Repository → Settings → Secrets → Actions
-5. New repository secret → Paste JSON content
-
----
-
-## Environment Variables
-
-### Staging (`.env.staging`)
-```env
-VITE_FIREBASE_API_KEY=AIzaSyCeqWTe8Rt61QEg4hg7rAlbWypORcnKylk
-VITE_FIREBASE_AUTH_DOMAIN=pdftools-staging.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=pdftools-staging
-VITE_FIREBASE_STORAGE_BUCKET=pdftools-staging.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=357214991867
-VITE_FIREBASE_APP_ID=1:357214991867:web:...
-```
-
-### Production (`.env.production`)
-```env
-VITE_FIREBASE_API_KEY=AIzaSyDjxjGe9uyGt3kNjcuJxbmLLPOm2aK0x8E
-VITE_FIREBASE_AUTH_DOMAIN=pdftools-prod.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=pdftools-prod
-VITE_FIREBASE_STORAGE_BUCKET=pdftools-prod.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=...
-```
-
----
-
-## Structura Proiect
-
-```
-app1/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml              # CI/CD pipeline
-├── src/
-│   ├── components/
-│   │   ├── layout/
-│   │   │   ├── Header.tsx          # Header cu auth state
-│   │   │   └── Footer.tsx
-│   │   └── ui/
-│   │       ├── Button.tsx
-│   │       └── FileDropzone.tsx
-│   ├── contexts/
-│   │   └── AuthContext.tsx         # Auth state management
-│   ├── lib/
-│   │   ├── pdf/
-│   │   │   ├── merge.ts            # PDF merge
-│   │   │   ├── split.ts            # PDF split
-│   │   │   ├── compress.ts         # PDF compress
-│   │   │   └── convert.ts          # PDF to images
-│   │   └── firebase.ts             # Firebase init
-│   ├── pages/
-│   │   ├── Home.tsx
-│   │   ├── Login.tsx               # Login/Register
-│   │   ├── Pricing.tsx
-│   │   ├── MergePdf.tsx
-│   │   ├── SplitPdf.tsx
-│   │   ├── CompressPdf.tsx
-│   │   └── ConvertPdf.tsx
-│   ├── App.tsx                     # Routes + AuthProvider
-│   ├── main.tsx
-│   └── index.css
-├── android/                        # Capacitor Android
-├── .env.staging
-├── .env.production
-├── firebase.json
-├── .firebaserc
-├── capacitor.config.ts
-├── SETUP.md                        # Acest fisier
-└── package.json
-```
-
----
-
-## Functionalitati PDF Implementate
-
-| Feature | Status | Fisier |
-|---------|--------|--------|
-| Merge PDF | ✅ Done | src/lib/pdf/merge.ts |
-| Split PDF | ✅ Done | src/lib/pdf/split.ts |
-| Compress PDF | ✅ Done | src/lib/pdf/compress.ts |
-| PDF to Images | ✅ Done | src/lib/pdf/convert.ts |
+| `FIREBASE_SERVICE_ACCOUNT_STAGING` | Configurat |
+| `FIREBASE_SERVICE_ACCOUNT_PRODUCTION` | Configurat |
 
 ---
 
@@ -218,16 +266,16 @@ npm run dev
 # Build
 npm run build
 
-# Deploy manual (fara CI/CD)
-npm run build && firebase deploy --only hosting -P staging
-npm run build && firebase deploy --only hosting -P production
+# Deploy manual
+npm run build && firebase deploy -P staging
+npm run build && firebase deploy -P production
 
-# Git - trigger deploy staging
-git add . && git commit -m "mesaj" && git push
+# Deploy doar functions
+firebase deploy --only functions -P staging
+firebase deploy --only functions -P production
 
-# Git - release production
-git tag v1.0.0 && git push origin v1.0.0
-# apoi manual din GitHub Actions
+# Deploy doar hosting
+firebase deploy --only hosting -P staging
 
 # Capacitor Android
 npx cap sync android
@@ -236,76 +284,131 @@ npx cap open android
 
 ---
 
+## Pricing
+
+| Plan | Pret | Interval | Savings |
+|------|------|----------|---------|
+| Free | $0 | - | - |
+| Pro Monthly | $8.99 | /month | - |
+| Pro Annual | $59.99 | /year | 44% vs monthly |
+
+---
+
+## Test Cards (Stripe Test Mode)
+
+| Card | Number | Result |
+|------|--------|--------|
+| Success | 4242 4242 4242 4242 | Payment succeeds |
+| Decline | 4000 0000 0000 0002 | Card declined |
+| 3D Secure | 4000 0025 0000 3155 | Requires authentication |
+
+Expiry: orice dată în viitor (ex: 12/34)
+CVC: orice 3 cifre (ex: 123)
+
+---
+
+## Structura Proiect
+
+```
+app1/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml              # CI/CD pipeline
+├── functions/                       # Firebase Cloud Functions
+│   ├── src/
+│   │   └── index.ts                # Stripe checkout + webhook
+│   ├── package.json
+│   └── tsconfig.json
+├── src/
+│   ├── components/
+│   │   ├── layout/
+│   │   │   ├── Header.tsx
+│   │   │   └── Footer.tsx
+│   │   └── ui/
+│   │       ├── Button.tsx
+│   │       ├── FileDropzone.tsx
+│   │       └── UsageLimitModal.tsx
+│   ├── contexts/
+│   │   └── AuthContext.tsx
+│   ├── hooks/
+│   │   └── useUsage.ts
+│   ├── lib/
+│   │   ├── pdf/
+│   │   │   ├── merge.ts
+│   │   │   ├── split.ts
+│   │   │   ├── compress.ts
+│   │   │   └── convert.ts
+│   │   ├── firebase.ts
+│   │   ├── fingerprint.ts
+│   │   ├── usage.ts
+│   │   └── stripe.ts
+│   ├── pages/
+│   │   ├── Home.tsx
+│   │   ├── Login.tsx
+│   │   ├── Pricing.tsx
+│   │   ├── MergePdf.tsx
+│   │   ├── SplitPdf.tsx
+│   │   ├── CompressPdf.tsx
+│   │   └── ConvertPdf.tsx
+│   ├── types/
+│   │   └── user.ts
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── android/
+├── .env.local
+├── .env.staging
+├── .env.production
+├── firebase.json
+├── firestore.rules
+├── SETUP.md
+└── README.md
+```
+
+---
+
 ## Status Implementare
 
-### Completat ✅
+### Completat
 
 - [x] React + Vite + TypeScript setup
 - [x] Tailwind CSS v4
 - [x] Firebase Hosting (staging + prod)
 - [x] PDF Merge, Split, Compress, Convert
 - [x] UI Components (FileDropzone, Button)
-- [x] Pages (Home, Login, Pricing, PDF tools)
-- [x] Capacitor Android setup
 - [x] Firebase Auth (Email/Password + Google)
 - [x] CI/CD Pipeline (GitHub Actions)
-- [x] GitHub Secrets configurate
+- [x] Usage Tracking (FingerprintJS + Firestore)
+- [x] Stripe Account & Products
+- [x] Cloud Functions (checkout + webhook)
+- [x] Pricing Page cu Stripe integration
 
-### TODO (Prioritate)
+### TODO
 
-| Task | Priority | Descriere |
-|------|----------|-----------|
-| Usage Tracking | HIGH | Firestore - 3 ops/zi free |
-| Stripe Integration | HIGH | Payments pentru Pro |
-| Premium Feature Gating | MEDIUM | Limita operatii, file size |
-| Android APK Build | MEDIUM | Capacitor build |
-| iOS Build | LOW | Necesita Mac |
-| Custom Domain | LOW | pdftools.ro sau similar |
-| SEO Optimization | LOW | Meta tags, sitemap |
-
----
-
-## Pricing Plan (De implementat)
-
-| Plan | Pret | Features |
-|------|------|----------|
-| Free | $0 | 3 ops/zi, max 10MB, watermark |
-| Pro Monthly | $7.99/luna | Unlimited, 100MB, no watermark |
-| Pro Annual | $49.99/an | Same, 48% savings |
-| Lifetime | $149 | One-time |
+- [x] Creează webhooks în Stripe Dashboard (test + live)
+- [x] Actualizează STRIPE_WEBHOOK_SECRET în Firebase
+- [ ] Testează checkout flow pe staging
+- [ ] Account page pentru subscription management
+- [ ] Android APK Build
+- [ ] iOS Build (necesita Mac)
 
 ---
 
-## Troubleshooting
+## Timeline / Istoric
 
-### Build Error: ReactNode type import
-```
-Error: 'ReactNode' is a type and must be imported using a type-only import
-```
-**Fix:** Schimba importul in:
-```typescript
-import { createContext, useContext, useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
-```
-
-### Auth Error: auth/configuration-not-found
-**Cauza:** Provider-ul nu e activat in Firebase Console
-**Fix:** Firebase Console → Authentication → Sign-in method → Enable provider
-
-### Deploy Error: Missing service account
-**Cauza:** Secret-ul GitHub nu e configurat
-**Fix:** Adauga FIREBASE_SERVICE_ACCOUNT_STAGING/PRODUCTION in GitHub Secrets
+- **19 Mar 2026**: Creat Stripe account (SkylineDigi)
+- **19 Mar 2026**: Creat products în Test Mode și Live Mode
+- **19 Mar 2026**: Setat Firebase secrets pentru ambele environments
+- **19 Mar 2026**: Deploy Cloud Functions (createCheckoutSession, stripeWebhook)
+- **19 Mar 2026**: Actualizat Pricing.tsx cu Stripe Checkout integration
 
 ---
 
-## Links Utile
+## Contact
 
-- [Firebase Console](https://console.firebase.google.com)
-- [GitHub Repository](https://github.com/flavicrisan92/pdftools-app)
-- [GitHub Actions](https://github.com/flavicrisan92/pdftools-app/actions)
-- [Staging App](https://pdftools-staging.web.app)
-- [Production App](https://pdftools-prod.web.app)
+- GitHub: [@flavicrisan92](https://github.com/flavicrisan92)
+- Email: flavicrisan92@gmail.com
 
 ---
 
-*Ultima actualizare: Martie 2026*
+*Ultima actualizare: 19 Martie 2026*

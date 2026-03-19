@@ -1,7 +1,7 @@
-import * as functions from 'firebase-functions';
+import { onRequest } from 'firebase-functions/v2/https';
+import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 import Stripe from 'stripe';
-import { defineSecret } from 'firebase-functions/params';
 
 admin.initializeApp();
 
@@ -10,19 +10,12 @@ const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
 const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
 
 // Create Stripe Checkout Session
-export const createCheckoutSession = functions
-  .runWith({ secrets: [stripeSecretKey] })
-  .https.onRequest(async (req, res) => {
-    // Handle CORS preflight
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
-
+export const createCheckoutSession = onRequest(
+  {
+    secrets: [stripeSecretKey],
+    cors: true,
+  },
+  async (req, res) => {
     if (req.method !== 'POST') {
       res.status(405).send('Method Not Allowed');
       return;
@@ -68,9 +61,11 @@ export const createCheckoutSession = functions
   });
 
 // Stripe Webhook to handle subscription events
-export const stripeWebhook = functions
-  .runWith({ secrets: [stripeSecretKey, stripeWebhookSecret] })
-  .https.onRequest(async (req, res) => {
+export const stripeWebhook = onRequest(
+  {
+    secrets: [stripeSecretKey, stripeWebhookSecret],
+  },
+  async (req, res) => {
     const sig = req.headers['stripe-signature'] as string;
     const stripe = new Stripe(stripeSecretKey.value());
 
