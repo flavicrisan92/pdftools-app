@@ -9,11 +9,17 @@
     "rewrites": [
       {
         "source": "/api/create-checkout-session",
-        "function": "createCheckoutSession"
+        "run": {
+          "serviceId": "createcheckoutsession",
+          "region": "us-central1"
+        }
       },
       {
         "source": "/api/stripe-webhook",
-        "function": "stripeWebhook"
+        "run": {
+          "serviceId": "stripewebhook",
+          "region": "us-central1"
+        }
       },
       {
         "source": "**",
