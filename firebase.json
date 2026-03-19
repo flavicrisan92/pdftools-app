@@ -8,20 +8,6 @@
     ],
     "rewrites": [
       {
-        "source": "/api/create-checkout-session",
-        "run": {
-          "serviceId": "createcheckoutsession",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/stripe-webhook",
-        "run": {
-          "serviceId": "stripewebhook",
-          "region": "us-central1"
-        }
-      },
-      {
         "source": "**",
         "destination": "/index.html"
       }
