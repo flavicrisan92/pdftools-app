@@ -1,8 +1,26 @@
-import { Check } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
+import { useAuth } from '../contexts/AuthContext';
+import { PRICES, PRICE_IDS } from '../lib/stripe';
 
-const plans = [
+type PlanType = 'free' | 'monthly' | 'annual';
+
+interface Plan {
+  id: PlanType;
+  name: string;
+  price: string;
+  period: string;
+  priceId?: string;
+  features: string[];
+  cta: string;
+  popular: boolean;
+}
+
+const plans: Plan[] = [
   {
+    id: 'free',
     name: 'Free',
     price: '$0',
     period: 'forever',
@@ -16,28 +34,30 @@ const plans = [
     popular: false,
   },
   {
+    id: 'monthly',
     name: 'Pro Monthly',
-    price: '$7.99',
+    price: `$${PRICES.PRO_MONTHLY.amount}`,
     period: '/month',
+    priceId: PRICE_IDS.PRO_MONTHLY,
     features: [
       'Unlimited operations',
       'Max 100MB file size',
       'Advanced compression',
       'No watermark',
       'Priority processing',
-      'Cloud storage (1GB)',
     ],
-    cta: 'Start Free Trial',
+    cta: 'Subscribe',
     popular: true,
   },
   {
+    id: 'annual',
     name: 'Pro Annual',
-    price: '$49.99',
+    price: `$${PRICES.PRO_ANNUAL.amount}`,
     period: '/year',
+    priceId: PRICE_IDS.PRO_ANNUAL,
     features: [
       'Everything in Pro Monthly',
-      'Save 48% vs monthly',
-      '2GB cloud storage',
+      `Save ${PRICES.PRO_ANNUAL.savings} vs monthly`,
       'Priority support',
     ],
     cta: 'Best Value',
@@ -46,6 +66,66 @@ const plans = [
 ];
 
 export function Pricing() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [loadingPlan, setLoadingPlan] = useState<PlanType | null>(null);
+
+  const handleSelectPlan = async (plan: Plan) => {
+    if (plan.id === 'free') {
+      navigate('/');
+      return;
+    }
+
+    if (!user) {
+      navigate('/login', { state: { from: '/pricing', selectedPlan: plan.id } });
+      return;
+    }
+
+    if (!plan.priceId) {
+      console.error('No price ID for plan:', plan.id);
+      return;
+    }
+
+    setLoadingPlan(plan.id);
+
+    try {
+      // Call Firebase Cloud Function to create Stripe Checkout Session
+      // When VITE_API_URL is set (local), call function directly; otherwise use hosting rewrite
+      const apiUrl = import.meta.env.VITE_API_URL
+        ? `${import.meta.env.VITE_API_URL}/createCheckoutSession`
+        : '/api/create-checkout-session';
+
+      const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            priceId: plan.priceId,
+            userId: user.uid,
+            userEmail: user.email,
+            successUrl: `${window.location.origin}/account?session_id={CHECKOUT_SESSION_ID}`,
+            cancelUrl: `${window.location.origin}/pricing`,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('No checkout URL returned');
+        alert('Unable to start checkout. Please try again.');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Unable to start checkout. Please try again.');
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-16">
       <div className="text-center mb-12">
@@ -89,8 +169,17 @@ export function Pricing() {
               variant={plan.popular ? 'primary' : 'outline'}
               className="w-full"
               size="lg"
+              onClick={() => handleSelectPlan(plan)}
+              disabled={loadingPlan !== null}
             >
-              {plan.cta}
+              {loadingPlan === plan.id ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading...
+                </span>
+              ) : (
+                plan.cta
+              )}
             </Button>
           </div>
         ))}

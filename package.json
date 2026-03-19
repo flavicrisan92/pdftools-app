@@ -15,7 +15,7 @@
     "@capacitor/core": "^8.2.0",
     "@capacitor/ios": "^8.2.0",
     "@fingerprintjs/fingerprintjs": "^5.1.0",
-    "@stripe/stripe-js": "^8.10.0",
+    "@stripe/stripe-js": "^8.11.0",
     "@tailwindcss/postcss": "^4.2.1",
     "firebase": "^12.10.0",
     "lucide-react": "^0.577.0",
