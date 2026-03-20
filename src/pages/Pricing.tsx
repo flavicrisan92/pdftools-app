@@ -240,8 +240,10 @@ export function Pricing() {
               key={plan.name}
               className={`relative bg-white rounded-2xl p-6 md:p-8 transition-all duration-300 ${
                 plan.popular
-                  ? 'border-2 border-primary-500 shadow-xl md:scale-105 md:-my-4'
-                  : 'border border-gray-200 shadow-sm hover:shadow-md'
+                  ? 'border-2 border-primary-500 shadow-xl md:scale-105 md:-my-4 order-first md:order-none'
+                  : plan.id === 'annual'
+                    ? 'border border-gray-200 shadow-sm hover:shadow-md order-2 md:order-none'
+                    : 'border border-gray-200 shadow-sm hover:shadow-md order-last md:order-none'
               }`}
             >
               {/* Badge */}
