@@ -15,7 +15,6 @@ export function SplitPdf() {
   const [pageRange, setPageRange] = useState('');
   const [selectedPages, setSelectedPages] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<Uint8Array | null>(null);
   const [mode, setMode] = useState<'range' | 'all'>('range');
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
@@ -64,19 +63,17 @@ export function SplitPdf() {
       return;
     }
     setFiles(newFiles.slice(0, 1));
-    setResult(null);
     setSelectedPages([]);
     setPageRange('');
   };
 
   const handleRemoveFile = () => {
     setFiles([]);
-    setResult(null);
     setSelectedPages([]);
     setPageRange('');
   };
 
-  const handleSplit = async () => {
+  const handleSplitAndDownload = async () => {
     if (files.length === 0) return;
 
     // Check usage limit
@@ -91,25 +88,20 @@ export function SplitPdf() {
     try {
       if (mode === 'range' && pageRange) {
         const splitResult = await splitPdf(files[0], { pageRanges: pageRange });
-        setResult(splitResult);
+        await recordUsage();
+        downloadPdf(splitResult, 'extracted-pages.pdf');
       } else if (mode === 'all') {
         const pages = await extractAllPages(files[0]);
+        await recordUsage();
         pages.forEach((page, index) => {
           downloadPdf(page, `page_${index + 1}.pdf`);
         });
       }
-      await recordUsage();
     } catch (error) {
       console.error('Error splitting PDF:', error);
       alert('Error splitting PDF. Please try again.');
     } finally {
       setIsProcessing(false);
-    }
-  };
-
-  const handleDownload = () => {
-    if (result) {
-      downloadPdf(result, 'split.pdf');
     }
   };
 
@@ -189,31 +181,25 @@ export function SplitPdf() {
               </>
             )}
 
-            {/* Action buttons */}
-            <div className="flex justify-center gap-4 pt-4 border-t border-gray-200">
-              {!result ? (
-                <Button
-                  onClick={handleSplit}
-                  disabled={(mode === 'range' && !pageRange) || isProcessing}
-                  size="lg"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : mode === 'all' ? (
-                    'Extract All Pages'
-                  ) : (
-                    'Extract Selected Pages'
-                  )}
-                </Button>
-              ) : (
-                <Button onClick={handleDownload} size="lg">
-                  <Download className="w-5 h-5 mr-2" />
-                  Download Split PDF
-                </Button>
-              )}
+            {/* Action button */}
+            <div className="flex justify-center pt-4 border-t border-gray-200">
+              <Button
+                onClick={handleSplitAndDownload}
+                disabled={(mode === 'range' && !pageRange) || isProcessing}
+                size="lg"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-5 h-5 mr-2" />
+                    {mode === 'all' ? 'Extract & Download All' : 'Extract & Download'}
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         )}

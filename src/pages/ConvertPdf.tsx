@@ -15,7 +15,6 @@ export function ConvertPdf() {
   const [format, setFormat] = useState<Format>('png');
   const [quality, setQuality] = useState(0.9);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
   const [showFileSizeModal, setShowFileSizeModal] = useState(false);
@@ -32,15 +31,13 @@ export function ConvertPdf() {
       return;
     }
     setFiles(newFiles.slice(0, 1));
-    setImages([]);
   };
 
   const handleRemoveFile = () => {
     setFiles([]);
-    setImages([]);
   };
 
-  const handleConvert = async () => {
+  const handleConvertAndDownload = async () => {
     if (files.length === 0) return;
 
     // Check usage limit
@@ -58,19 +55,15 @@ export function ConvertPdf() {
         quality,
         scale: 2,
       });
-      setImages(convertedImages);
       await recordUsage();
+      const baseName = files[0].name.replace('.pdf', '');
+      await downloadAllImages(convertedImages, baseName, format);
     } catch (error) {
       console.error('Error converting PDF:', error);
       alert('Error converting PDF. Please try again.');
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const handleDownloadAll = async () => {
-    const baseName = files[0].name.replace('.pdf', '');
-    await downloadAllImages(images, baseName, format);
   };
 
   return (
@@ -134,49 +127,25 @@ export function ConvertPdf() {
           </div>
         )}
 
-        {images.length > 0 && (
-          <div className="mt-6">
-            <h3 className="font-medium text-gray-900 mb-3">Preview ({images.length} pages)</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-              {images.map((img, index) => (
-                <div key={index} className="border rounded-lg overflow-hidden">
-                  <img
-                    src={img}
-                    alt={`Page ${index + 1}`}
-                    className="w-full h-auto"
-                  />
-                  <div className="p-2 bg-gray-50 text-center text-sm text-gray-600">
-                    Page {index + 1}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {files.length > 0 && (
-          <div className="mt-6 flex justify-center gap-4">
-            {images.length === 0 ? (
-              <Button
-                onClick={handleConvert}
-                disabled={isProcessing}
-                size="lg"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Converting...
-                  </>
-                ) : (
-                  'Convert to Images'
-                )}
-              </Button>
-            ) : (
-              <Button onClick={handleDownloadAll} size="lg">
-                <Download className="w-5 h-5 mr-2" />
-                Download All Images
-              </Button>
-            )}
+          <div className="mt-6 flex justify-center">
+            <Button
+              onClick={handleConvertAndDownload}
+              disabled={isProcessing}
+              size="lg"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Converting...
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5 mr-2" />
+                  Convert & Download
+                </>
+              )}
+            </Button>
           </div>
         )}
       </div>

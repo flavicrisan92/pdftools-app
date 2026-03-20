@@ -12,7 +12,6 @@ import { FREE_LIMIT } from '../types/user';
 export function MergePdf() {
   const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<Uint8Array | null>(null);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
   const [showFileSizeModal, setShowFileSizeModal] = useState(false);
@@ -32,25 +31,21 @@ export function MergePdf() {
       }
     }
     setFiles((prev) => [...prev, ...newFiles]);
-    setResult(null);
   };
 
   const handleRemoveFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
-    setResult(null);
   };
 
   const handleReorder = (newFiles: File[]) => {
     setFiles(newFiles);
-    setResult(null);
   };
 
   const handleClearAll = () => {
     setFiles([]);
-    setResult(null);
   };
 
-  const handleMerge = async () => {
+  const handleMergeAndDownload = async () => {
     if (files.length < 2) return;
 
     // Check usage limit
@@ -64,19 +59,13 @@ export function MergePdf() {
     setIsProcessing(true);
     try {
       const mergedPdf = await mergePdfs(files);
-      setResult(mergedPdf);
       await recordUsage();
+      downloadPdf(mergedPdf, 'merged.pdf');
     } catch (error) {
       console.error('Error merging PDFs:', error);
       alert('Error merging PDFs. Please try again.');
     } finally {
       setIsProcessing(false);
-    }
-  };
-
-  const handleDownload = () => {
-    if (result) {
-      downloadPdf(result, 'merged.pdf');
     }
   };
 
@@ -121,28 +110,24 @@ export function MergePdf() {
         )}
 
         {files.length >= 2 && (
-          <div className="mt-6 flex justify-center gap-4">
-            {!result ? (
-              <Button
-                onClick={handleMerge}
-                disabled={isProcessing}
-                size="lg"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Merging...
-                  </>
-                ) : (
-                  `Merge ${files.length} PDFs`
-                )}
-              </Button>
-            ) : (
-              <Button onClick={handleDownload} size="lg">
-                <Download className="w-5 h-5 mr-2" />
-                Download Merged PDF
-              </Button>
-            )}
+          <div className="mt-6 flex justify-center">
+            <Button
+              onClick={handleMergeAndDownload}
+              disabled={isProcessing}
+              size="lg"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Merging...
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5 mr-2" />
+                  Merge & Download
+                </>
+              )}
+            </Button>
           </div>
         )}
 

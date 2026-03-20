@@ -12,8 +12,7 @@ import { FREE_LIMIT } from '../types/user';
 export function CompressPdf() {
   const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [result, setResult] = useState<Uint8Array | null>(null);
-  const [stats, setStats] = useState<{ original: number; compressed: number } | null>(null);
+  const [compressionStats, setCompressionStats] = useState<{ original: number; compressed: number } | null>(null);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
   const [showFileSizeModal, setShowFileSizeModal] = useState(false);
@@ -30,17 +29,15 @@ export function CompressPdf() {
       return;
     }
     setFiles(newFiles.slice(0, 1));
-    setResult(null);
-    setStats(null);
+    setCompressionStats(null);
   };
 
   const handleRemoveFile = () => {
     setFiles([]);
-    setResult(null);
-    setStats(null);
+    setCompressionStats(null);
   };
 
-  const handleCompress = async () => {
+  const handleCompressAndDownload = async () => {
     if (files.length === 0) return;
 
     // Check usage limit
@@ -54,23 +51,17 @@ export function CompressPdf() {
     setIsProcessing(true);
     try {
       const compressed = await compressPdf(files[0], { quality: 'medium' });
-      setResult(compressed);
-      setStats({
+      setCompressionStats({
         original: files[0].size,
         compressed: compressed.length,
       });
       await recordUsage();
+      downloadPdf(compressed, `compressed_${files[0].name}`);
     } catch (error) {
       console.error('Error compressing PDF:', error);
       alert('Error compressing PDF. Please try again.');
     } finally {
       setIsProcessing(false);
-    }
-  };
-
-  const handleDownload = () => {
-    if (result) {
-      downloadPdf(result, `compressed_${files[0].name}`);
     }
   };
 
@@ -99,15 +90,15 @@ export function CompressPdf() {
           </div>
         )}
 
-        {stats && (() => {
-          const ratio = calculateCompressionRatio(stats.original, stats.compressed);
+        {compressionStats && (() => {
+          const ratio = calculateCompressionRatio(compressionStats.original, compressionStats.compressed);
           const isSmaller = ratio > 0;
           return (
             <div className={`mt-6 p-4 rounded-lg ${isSmaller ? 'bg-green-50' : 'bg-yellow-50'}`}>
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-sm text-gray-600">Original: {formatFileSize(stats.original)}</p>
-                  <p className="text-sm text-gray-600">Compressed: {formatFileSize(stats.compressed)}</p>
+                  <p className="text-sm text-gray-600">Original: {formatFileSize(compressionStats.original)}</p>
+                  <p className="text-sm text-gray-600">Compressed: {formatFileSize(compressionStats.compressed)}</p>
                 </div>
                 <div className="text-right">
                   <p className={`text-2xl font-bold ${isSmaller ? 'text-green-600' : 'text-yellow-600'}`}>
@@ -123,28 +114,24 @@ export function CompressPdf() {
         })()}
 
         {files.length > 0 && (
-          <div className="mt-6 flex justify-center gap-4">
-            {!result ? (
-              <Button
-                onClick={handleCompress}
-                disabled={isProcessing}
-                size="lg"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Compressing...
-                  </>
-                ) : (
-                  'Compress PDF'
-                )}
-              </Button>
-            ) : (
-              <Button onClick={handleDownload} size="lg">
-                <Download className="w-5 h-5 mr-2" />
-                Download Compressed PDF
-              </Button>
-            )}
+          <div className="mt-6 flex justify-center">
+            <Button
+              onClick={handleCompressAndDownload}
+              disabled={isProcessing}
+              size="lg"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Compressing...
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5 mr-2" />
+                  Compress & Download
+                </>
+              )}
+            </Button>
           </div>
         )}
       </div>
