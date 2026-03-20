@@ -1,9 +1,12 @@
-import { useState } from 'react';
-import { Check, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Check, Loader2, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '../lib/firebase';
 import { PRICES, PRICE_IDS } from '../lib/stripe';
+import type { SubscriptionType } from '../types/user';
 
 type PlanType = 'free' | 'monthly' | 'annual';
 
@@ -66,9 +69,39 @@ const plans: Plan[] = [
 ];
 
 export function Pricing() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState<PlanType | null>(null);
+  const [userPlan, setUserPlan] = useState<string | null>(null);
+  const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>(null);
+  const [checkingPlan, setCheckingPlan] = useState(true);
+
+  // Check user's current plan
+  useEffect(() => {
+    async function checkPlan() {
+      if (authLoading) return;
+
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            const data = userDoc.data();
+            setUserPlan(data.plan || 'free');
+            setSubscriptionType(data.subscriptionType || null);
+          } else {
+            setUserPlan('free');
+          }
+        } catch (error) {
+          console.error('Error checking plan:', error);
+          setUserPlan('free');
+        }
+      } else {
+        setUserPlan(null);
+      }
+      setCheckingPlan(false);
+    }
+    checkPlan();
+  }, [user, authLoading]);
 
   const handleSelectPlan = async (plan: Plan) => {
     if (plan.id === 'free') {
@@ -89,26 +122,23 @@ export function Pricing() {
     setLoadingPlan(plan.id);
 
     try {
-      // Call Firebase Cloud Function to create Stripe Checkout Session
-      // When VITE_API_URL is set (local), call function directly; otherwise use hosting rewrite
       const apiUrl = import.meta.env.VITE_API_URL
         ? `${import.meta.env.VITE_API_URL}/createCheckoutSession`
         : '/api/create-checkout-session';
 
       const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            priceId: plan.priceId,
-            userId: user.uid,
-            userEmail: user.email,
-            successUrl: `${window.location.origin}/account?session_id={CHECKOUT_SESSION_ID}`,
-            cancelUrl: `${window.location.origin}/pricing`,
-          }),
-        }
-      );
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: plan.priceId,
+          userId: user.uid,
+          userEmail: user.email,
+          successUrl: `${window.location.origin}/account?session_id={CHECKOUT_SESSION_ID}`,
+          cancelUrl: `${window.location.origin}/pricing`,
+        }),
+      });
 
       const data = await response.json();
 
@@ -126,6 +156,48 @@ export function Pricing() {
     }
   };
 
+  // Show loading while checking plan
+  if (authLoading || checkingPlan) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      </div>
+    );
+  }
+
+  // User is already Pro - show different content
+  if (userPlan === 'pro') {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+        <div className="bg-primary-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Crown className="w-10 h-10 text-primary-600" />
+        </div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">
+          You're already on Pro!
+        </h1>
+        <p className="text-lg text-gray-600 mb-2">
+          You have unlimited access to all PDF tools.
+        </p>
+        <p className="text-gray-500 mb-8">
+          {subscriptionType === 'monthly'
+            ? 'You are on the Monthly plan. Switch to Annual in your account settings to save 44%.'
+            : subscriptionType === 'annual'
+              ? 'You are on the Annual plan. Thank you for your support!'
+              : 'Thank you for being a Pro member!'}
+        </p>
+        <div className="flex gap-4 justify-center">
+          <Button onClick={() => navigate('/account')} variant="primary">
+            Manage Subscription
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/')}>
+            Go to Tools
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Regular pricing page for non-Pro users
   return (
     <div className="max-w-7xl mx-auto px-4 py-16">
       <div className="text-center mb-12">

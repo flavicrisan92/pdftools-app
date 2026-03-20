@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { CheckCircle, Crown, Calendar, Mail, Loader2, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
 import { Button } from '../components/ui/Button';
-import type { UserPlan } from '../types/user';
+import type { UserPlan, SubscriptionType } from '../types/user';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 interface UserData {
   plan: UserPlan;
+  subscriptionType?: SubscriptionType;
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   subscriptionStatus?: string;
@@ -23,10 +24,30 @@ export function Account() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
-
   const [managingSubscription, setManagingSubscription] = useState(false);
 
   const sessionId = searchParams.get('session_id');
+
+  const fetchUserData = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        setUserData(userDoc.data() as UserData);
+      } else {
+        setUserData({ plan: 'free' });
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      setUserData({ plan: 'free' });
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   const handleManageSubscription = async () => {
     if (!userData?.stripeCustomerId) return;
@@ -38,7 +59,7 @@ export function Account() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerId: userData.stripeCustomerId,
-          returnUrl: window.location.href,
+          returnUrl: window.location.origin + '/account',
         }),
       });
 
@@ -54,48 +75,33 @@ export function Account() {
     }
   };
 
+  // Handle return from Stripe checkout
   useEffect(() => {
     if (sessionId) {
       setShowSuccess(true);
-      // Remove session_id from URL after showing success
-      const timer = setTimeout(() => {
+      // Wait for webhook to process, then refetch user data
+      const timer = setTimeout(async () => {
+        await fetchUserData();
         navigate('/account', { replace: true });
-      }, 5000);
+      }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [sessionId, navigate]);
+  }, [sessionId, navigate, fetchUserData]);
 
+  // Initial fetch
   useEffect(() => {
-    async function fetchUserData() {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          setUserData(userDoc.data() as UserData);
-        } else {
-          setUserData({ plan: 'free' });
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-        setUserData({ plan: 'free' });
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (!authLoading) {
+    if (!authLoading && !sessionId) {
       fetchUserData();
     }
-  }, [user, authLoading]);
+  }, [authLoading, sessionId, fetchUserData]);
 
   if (authLoading || loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-16 flex justify-center">
+      <div className="max-w-2xl mx-auto px-4 py-16 flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+        {sessionId && (
+          <p className="text-gray-600">Processing your subscription...</p>
+        )}
       </div>
     );
   }
@@ -114,6 +120,11 @@ export function Account() {
   }
 
   const isPro = userData?.plan === 'pro';
+  const subscriptionLabel = userData?.subscriptionType === 'annual'
+    ? 'Annual subscription'
+    : userData?.subscriptionType === 'monthly'
+      ? 'Monthly subscription'
+      : 'Active subscription';
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-16">
@@ -160,9 +171,7 @@ export function Account() {
               </div>
               <div>
                 <p className="font-semibold text-gray-900">Pro Plan</p>
-                <p className="text-sm text-gray-500">
-                  {userData?.subscriptionStatus === 'active' ? 'Active subscription' : 'Unlimited access to all features'}
-                </p>
+                <p className="text-sm text-gray-500">{subscriptionLabel}</p>
               </div>
             </div>
             {userData?.stripeCustomerId && (

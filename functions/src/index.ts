@@ -130,17 +130,27 @@ export const stripeWebhook = onRequest(
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId;
 
-        if (userId) {
+        if (userId && session.subscription) {
+          // Fetch subscription to get price details
+          const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string
+          );
+
+          const interval = subscription.items.data[0]?.price.recurring?.interval;
+          const subscriptionType = interval === 'year' ? 'annual' : 'monthly';
+
           await db.collection('users').doc(userId).set(
             {
               plan: 'pro',
+              subscriptionType: subscriptionType,
               stripeCustomerId: session.customer,
               stripeSubscriptionId: session.subscription,
+              subscriptionStatus: 'active',
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             },
             { merge: true }
           );
-          console.log(`User ${userId} upgraded to pro`);
+          console.log(`User ${userId} upgraded to pro (${subscriptionType})`);
         }
         break;
       }
@@ -151,15 +161,19 @@ export const stripeWebhook = onRequest(
 
         if (userId) {
           const isActive = ['active', 'trialing'].includes(subscription.status);
+          const interval = subscription.items.data[0]?.price.recurring?.interval;
+          const subscriptionType = interval === 'year' ? 'annual' : 'monthly';
+
           await db.collection('users').doc(userId).set(
             {
               plan: isActive ? 'pro' : 'free',
+              subscriptionType: isActive ? subscriptionType : null,
               subscriptionStatus: subscription.status,
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             },
             { merge: true }
           );
-          console.log(`User ${userId} subscription status: ${subscription.status}`);
+          console.log(`User ${userId} subscription status: ${subscription.status} (${subscriptionType})`);
         }
         break;
       }
@@ -172,6 +186,7 @@ export const stripeWebhook = onRequest(
           await db.collection('users').doc(userId).set(
             {
               plan: 'free',
+              subscriptionType: null,
               subscriptionStatus: 'canceled',
               updatedAt: admin.firestore.FieldValue.serverTimestamp(),
             },

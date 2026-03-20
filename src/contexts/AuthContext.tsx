@@ -8,7 +8,8 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, googleProvider, db } from '../lib/firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -23,14 +24,38 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function ensureUserDocument(user: User) {
+  const userRef = doc(db, 'users', user.uid);
+  const userDoc = await getDoc(userRef);
+
+  if (!userDoc.exists()) {
+    await setDoc(userRef, {
+      uid: user.uid,
+      email: user.email,
+      plan: 'free',
+      subscriptionType: null,
+      operationsToday: 0,
+      lastOperationDate: new Date().toISOString().split('T')[0],
+      createdAt: new Date(),
+    });
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+      if (user) {
+        try {
+          await ensureUserDocument(user);
+        } catch (err) {
+          console.error('Error ensuring user document:', err);
+        }
+      }
       setLoading(false);
     });
 
@@ -40,7 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = async () => {
     try {
       setError(null);
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      await ensureUserDocument(result.user);
     } catch (err) {
       setError(getErrorMessage(err));
       throw err;
@@ -50,7 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithEmail = async (email: string, password: string) => {
     try {
       setError(null);
-      await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      await ensureUserDocument(result.user);
     } catch (err) {
       setError(getErrorMessage(err));
       throw err;
@@ -60,7 +87,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUpWithEmail = async (email: string, password: string) => {
     try {
       setError(null);
-      await createUserWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      await ensureUserDocument(result.user);
     } catch (err) {
       setError(getErrorMessage(err));
       throw err;
