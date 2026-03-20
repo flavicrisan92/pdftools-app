@@ -263,7 +263,7 @@ export function Pricing() {
               {/* CTA Button */}
               <Button
                 variant={plan.popular ? 'primary' : 'outline'}
-                className="w-full mb-6"
+                className={`w-full mb-6 ${plan.popular ? 'animate-pulse-subtle' : ''}`}
                 size="lg"
                 onClick={() => handleSelectPlan(plan)}
                 disabled={loadingPlan !== null}

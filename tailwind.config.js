@@ -19,7 +19,16 @@ export default {
           800: '#075985',
           900: '#0c4a6e',
         }
-      }
+      },
+      animation: {
+        'pulse-subtle': 'pulse-subtle 2s ease-in-out infinite',
+      },
+      keyframes: {
+        'pulse-subtle': {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.9', transform: 'scale(1.02)' },
+        },
+      },
     },
   },
   plugins: [],
