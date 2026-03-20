@@ -25,8 +25,8 @@ export default {
       },
       keyframes: {
         'pulse-subtle': {
-          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
-          '50%': { opacity: '0.9', transform: 'scale(1.02)' },
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(14, 165, 233, 0.4)' },
+          '50%': { boxShadow: '0 0 0 8px rgba(14, 165, 233, 0)' },
         },
       },
     },
