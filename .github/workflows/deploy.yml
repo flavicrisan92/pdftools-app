@@ -6,28 +6,18 @@ on:
       - master
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Environment to deploy'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
       tag:
-        description: 'Tag to deploy (for production)'
-        required: false
+        description: 'Tag to deploy (e.g. v1.0.3)'
+        required: true
         type: string
 
 jobs:
   build-staging:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    if: github.event_name == 'push'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -49,12 +39,12 @@ jobs:
 
   build-production:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production'
+    if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
+          ref: ${{ github.event.inputs.tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -67,6 +57,8 @@ jobs:
 
       - name: Build for production
         run: npm run build -- --mode production
+        env:
+          VITE_APP_VERSION: ${{ github.event.inputs.tag }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

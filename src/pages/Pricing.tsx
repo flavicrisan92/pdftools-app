@@ -94,8 +94,8 @@ export function Pricing() {
   const [userPlan, setUserPlan] = useState<string | null>(null);
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>(null);
   const [checkingPlan, setCheckingPlan] = useState(true);
-  // Fallback prices while loading or if API fails
-  const [plans, setPlans] = useState<Plan[]>(buildPlans(8.99, 59.99));
+  const [plans, setPlans] = useState<Plan[] | null>(null);
+  const [pricesLoading, setPricesLoading] = useState(true);
 
   // Fetch prices from Stripe
   useEffect(() => {
@@ -104,10 +104,11 @@ export function Pricing() {
       if (stripePrices.length > 0) {
         const monthly = stripePrices.find(p => p.interval === 'month');
         const annual = stripePrices.find(p => p.interval === 'year');
-        if (monthly || annual) {
-          setPlans(buildPlans(monthly?.amount || 8.99, annual?.amount || 59.99));
+        if (monthly && annual) {
+          setPlans(buildPlans(monthly.amount, annual.amount));
         }
       }
+      setPricesLoading(false);
     }
     loadPrices();
   }, []);
@@ -191,10 +192,18 @@ export function Pricing() {
     }
   };
 
-  if (authLoading || checkingPlan) {
+  if (authLoading || checkingPlan || pricesLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+      </div>
+    );
+  }
+
+  if (!plans) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <p className="text-gray-500">Unable to load pricing. Please refresh.</p>
       </div>
     );
   }
