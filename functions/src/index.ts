@@ -9,6 +9,49 @@ admin.initializeApp();
 const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
 const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
 
+// Get Stripe Prices
+export const getPrices = onRequest(
+  {
+    secrets: [stripeSecretKey],
+    cors: true,
+  },
+  async (req, res) => {
+    try {
+      const stripe = new Stripe(stripeSecretKey.value(), {
+        apiVersion: '2023-10-16',
+      });
+
+      // Fetch active prices with their products
+      const prices = await stripe.prices.list({
+        active: true,
+        expand: ['data.product'],
+        type: 'recurring',
+      });
+
+      const formattedPrices = prices.data
+        .filter(price => {
+          const product = price.product as Stripe.Product;
+          return product.active;
+        })
+        .map(price => {
+          const product = price.product as Stripe.Product;
+          return {
+            id: price.id,
+            productId: product.id,
+            name: product.name,
+            amount: (price.unit_amount || 0) / 100,
+            currency: price.currency.toUpperCase(),
+            interval: price.recurring?.interval,
+          };
+        });
+
+      res.status(200).json({ prices: formattedPrices });
+    } catch (error) {
+      console.error('Error fetching prices:', error);
+      res.status(500).json({ error: 'Failed to fetch prices' });
+    }
+  });
+
 // Create Stripe Checkout Session
 export const createCheckoutSession = onRequest(
   {

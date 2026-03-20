@@ -5,7 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../lib/firebase';
-import { PRICES, PRICE_IDS } from '../lib/stripe';
+import { PRICE_IDS, fetchStripePrices } from '../lib/stripe';
 import type { SubscriptionType } from '../types/user';
 
 type PlanType = 'free' | 'monthly' | 'annual';
@@ -24,62 +24,68 @@ interface Plan {
   badge?: string;
 }
 
-const plans: Plan[] = [
-  {
-    id: 'free',
-    name: 'Free',
-    price: '$0',
-    period: 'forever',
-    features: [
-      { text: '3 operations per day', included: true },
-      { text: 'Max 10MB file size', included: true },
-      { text: 'Basic tools', included: true },
-      { text: 'Unlimited operations', included: false },
-      { text: '100MB file size', included: false },
-      { text: 'Priority support', included: false },
-    ],
-    cta: 'Start Free',
-    popular: false,
-  },
-  {
-    id: 'monthly',
-    name: 'Pro',
-    price: `$${PRICES.PRO_MONTHLY.amount}`,
-    period: '/month',
-    priceId: PRICE_IDS.PRO_MONTHLY,
-    features: [
-      { text: 'Unlimited operations', included: true },
-      { text: 'Max 100MB file size', included: true },
-      { text: 'All PDF tools', included: true },
-      { text: 'No watermarks', included: true },
-      { text: 'Priority processing', included: true },
-      { text: 'Email support', included: true },
-    ],
-    cta: 'Get Pro Now',
-    popular: true,
-    badge: 'Most Popular',
-  },
-  {
-    id: 'annual',
-    name: 'Pro Annual',
-    price: `$${PRICES.PRO_ANNUAL.amount}`,
-    originalPrice: `$${(PRICES.PRO_MONTHLY.amount * 12).toFixed(0)}`,
-    monthlyEquivalent: `$${(PRICES.PRO_ANNUAL.amount / 12).toFixed(2)}`,
-    period: '/year',
-    priceId: PRICE_IDS.PRO_ANNUAL,
-    features: [
-      { text: 'Everything in Pro', included: true },
-      { text: `Save ${PRICES.PRO_ANNUAL.savings}`, included: true },
-      { text: 'Priority support', included: true },
-      { text: 'Early access to features', included: true },
-      { text: 'Dedicated assistance', included: true },
-      { text: 'Best value', included: true },
-    ],
-    cta: 'Get Best Value',
-    popular: false,
-    badge: `Save ${PRICES.PRO_ANNUAL.savings}`,
-  },
-];
+function buildPlans(monthlyPrice: number, annualPrice: number): Plan[] {
+  const savings = monthlyPrice > 0
+    ? Math.round((1 - annualPrice / (monthlyPrice * 12)) * 100)
+    : 0;
+
+  return [
+    {
+      id: 'free',
+      name: 'Free',
+      price: '$0',
+      period: 'forever',
+      features: [
+        { text: '3 operations per day', included: true },
+        { text: 'Max 10MB file size', included: true },
+        { text: 'Basic tools', included: true },
+        { text: 'Unlimited operations', included: false },
+        { text: '100MB file size', included: false },
+        { text: 'Priority support', included: false },
+      ],
+      cta: 'Start Free',
+      popular: false,
+    },
+    {
+      id: 'monthly',
+      name: 'Pro',
+      price: monthlyPrice > 0 ? `$${monthlyPrice}` : '...',
+      period: '/month',
+      priceId: PRICE_IDS.PRO_MONTHLY,
+      features: [
+        { text: 'Unlimited operations', included: true },
+        { text: 'Max 100MB file size', included: true },
+        { text: 'All PDF tools', included: true },
+        { text: 'No watermarks', included: true },
+        { text: 'Priority processing', included: true },
+        { text: 'Email support', included: true },
+      ],
+      cta: 'Get Pro Now',
+      popular: true,
+      badge: 'Most Popular',
+    },
+    {
+      id: 'annual',
+      name: 'Pro Annual',
+      price: annualPrice > 0 ? `$${annualPrice}` : '...',
+      originalPrice: monthlyPrice > 0 ? `$${(monthlyPrice * 12).toFixed(0)}` : undefined,
+      monthlyEquivalent: annualPrice > 0 ? `$${(annualPrice / 12).toFixed(2)}` : undefined,
+      period: '/year',
+      priceId: PRICE_IDS.PRO_ANNUAL,
+      features: [
+        { text: 'Everything in Pro', included: true },
+        { text: savings > 0 ? `Save ${savings}%` : 'Best value', included: true },
+        { text: 'Priority support', included: true },
+        { text: 'Early access to features', included: true },
+        { text: 'Dedicated assistance', included: true },
+        { text: 'Best value', included: true },
+      ],
+      cta: 'Get Best Value',
+      popular: false,
+      badge: savings > 0 ? `Save ${savings}%` : undefined,
+    },
+  ];
+}
 
 export function Pricing() {
   const { user, loading: authLoading } = useAuth();
@@ -88,6 +94,18 @@ export function Pricing() {
   const [userPlan, setUserPlan] = useState<string | null>(null);
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>(null);
   const [checkingPlan, setCheckingPlan] = useState(true);
+  const [plans, setPlans] = useState<Plan[]>(buildPlans(0, 0));
+
+  // Fetch prices from Stripe
+  useEffect(() => {
+    async function loadPrices() {
+      const stripePrices = await fetchStripePrices();
+      const monthly = stripePrices.find(p => p.interval === 'month');
+      const annual = stripePrices.find(p => p.interval === 'year');
+      setPlans(buildPlans(monthly?.amount || 0, annual?.amount || 0));
+    }
+    loadPrices();
+  }, []);
 
   useEffect(() => {
     async function checkPlan() {
