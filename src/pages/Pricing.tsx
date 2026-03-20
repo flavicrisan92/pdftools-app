@@ -222,7 +222,7 @@ export function Pricing() {
           <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
             <span className="flex items-center gap-1">
               <Shield className="w-4 h-4 text-green-500" />
-              30-day money-back
+              Cancel anytime
             </span>
             <span className="flex items-center gap-1">
               <Zap className="w-4 h-4 text-yellow-500" />
@@ -364,8 +364,8 @@ export function Pricing() {
                 What's your refund policy?
               </h3>
               <p className="text-gray-600 mt-2">
-                We offer a 30-day money-back guarantee. If you're not satisfied,
-                contact us for a full refund.
+                You can cancel your subscription anytime from your account page.
+                Your access continues until the end of the billing period.
               </p>
             </div>
             <div>
