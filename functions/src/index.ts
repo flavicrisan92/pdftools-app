@@ -62,6 +62,42 @@ export const createCheckoutSession = onRequest(
     }
   });
 
+// Create Stripe Customer Portal Session for subscription management
+export const createPortalSession = onRequest(
+  {
+    secrets: [stripeSecretKey],
+    cors: true,
+  },
+  async (req, res) => {
+    if (req.method !== 'POST') {
+      res.status(405).send('Method Not Allowed');
+      return;
+    }
+
+    try {
+      const { customerId, returnUrl } = req.body;
+
+      if (!customerId || !returnUrl) {
+        res.status(400).json({ error: 'Missing required fields' });
+        return;
+      }
+
+      const stripe = new Stripe(stripeSecretKey.value(), {
+        apiVersion: '2023-10-16',
+      });
+
+      const session = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: returnUrl,
+      });
+
+      res.status(200).json({ url: session.url });
+    } catch (error) {
+      console.error('Error creating portal session:', error);
+      res.status(500).json({ error: 'Failed to create portal session' });
+    }
+  });
+
 // Stripe Webhook to handle subscription events
 export const stripeWebhook = onRequest(
   {

@@ -9,6 +9,7 @@ import { CompressPdf } from './pages/CompressPdf';
 import { ConvertPdf } from './pages/ConvertPdf';
 import { Pricing } from './pages/Pricing';
 import { Login } from './pages/Login';
+import { Account } from './pages/Account';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/convert" element={<ConvertPdf />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/account" element={<Account />} />
           </Routes>
         </main>
         <Footer />
