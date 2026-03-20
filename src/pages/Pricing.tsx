@@ -74,11 +74,11 @@ function buildPlans(monthlyPrice: number, annualPrice: number): Plan[] {
       priceId: PRICE_IDS.PRO_ANNUAL,
       features: [
         { text: 'Everything in Pro', included: true },
-        { text: savings > 0 ? `Save ${savings}%` : 'Best value', included: true },
+        { text: savings > 0 ? `Save ${savings}%` : 'Annual savings', included: true },
         { text: 'Priority support', included: true },
         { text: 'Early access to features', included: true },
         { text: 'Dedicated assistance', included: true },
-        { text: 'Best value', included: true },
+        { text: 'Best value for teams', included: true },
       ],
       cta: 'Get Best Value',
       popular: false,
