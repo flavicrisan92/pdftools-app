@@ -164,7 +164,7 @@ export function MergePdf() {
         isOpen={showFileSizeModal}
         onClose={() => setShowFileSizeModal(false)}
         fileSize={oversizedFile?.size || 0}
-        maxSize={oversizedFile?.maxSize || maxFileSize}
+        maxSize={oversizedFile?.maxSize || 0}
       />
     </div>
   );
