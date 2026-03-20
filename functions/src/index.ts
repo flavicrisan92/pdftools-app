@@ -5,7 +5,7 @@ import Stripe from 'stripe';
 
 admin.initializeApp();
 
-// Define secrets
+// Define secrets - always uses latest version
 const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY');
 const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET');
 

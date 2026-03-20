@@ -59,7 +59,8 @@
       "Bash(gcloud logging read:*)",
       "Bash(timeout:*)",
       "Bash(dir:*)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(gcloud functions describe:*)"
     ]
   }
 }
