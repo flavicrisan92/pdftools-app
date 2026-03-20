@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export function Footer() {
   return (
     <footer className="border-t border-gray-200 bg-gray-50 mt-auto">
@@ -7,15 +9,15 @@ export function Footer() {
             &copy; {new Date().getFullYear()} PDF Tools. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <a href="#" className="text-gray-500 hover:text-gray-700 text-sm">
+            <Link to="/privacy" className="text-gray-500 hover:text-gray-700 text-sm">
               Privacy Policy
-            </a>
-            <a href="#" className="text-gray-500 hover:text-gray-700 text-sm">
+            </Link>
+            <Link to="/terms" className="text-gray-500 hover:text-gray-700 text-sm">
               Terms of Service
-            </a>
-            <a href="#" className="text-gray-500 hover:text-gray-700 text-sm">
+            </Link>
+            <Link to="/contact" className="text-gray-500 hover:text-gray-700 text-sm">
               Contact
-            </a>
+            </Link>
           </div>
         </div>
       </div>

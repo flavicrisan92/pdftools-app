@@ -10,7 +10,7 @@ interface FileDropzoneProps {
   onClearAll?: () => void;
   accept?: Accept;
   multiple?: boolean;
-  maxSize?: number;
+  maxSize?: number | null;
 }
 
 export function FileDropzone({
@@ -20,7 +20,7 @@ export function FileDropzone({
   onClearAll,
   accept = { 'application/pdf': ['.pdf'] },
   multiple = true,
-  maxSize = 10 * 1024 * 1024, // 10MB default
+  maxSize = null,
 }: FileDropzoneProps) {
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -33,7 +33,7 @@ export function FileDropzone({
     onDrop,
     accept,
     multiple,
-    maxSize,
+    ...(maxSize && { maxSize }),
   });
 
   const formatSize = (bytes: number) => {
@@ -63,9 +63,11 @@ export function FileDropzone({
             <p className="text-gray-600 font-medium">
               Drag & drop PDF files here, or click to select
             </p>
-            <p className="text-gray-400 text-sm mt-2">
-              Max file size: {formatSize(maxSize)}
-            </p>
+            {maxSize && (
+              <p className="text-gray-400 text-sm mt-2">
+                Max file size: {formatSize(maxSize)}
+              </p>
+            )}
           </>
         )}
       </div>

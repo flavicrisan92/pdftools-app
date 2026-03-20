@@ -7,9 +7,10 @@ import {
   incrementFirestoreUsage,
 } from '../lib/usage';
 import type { UsageStats } from '../types/user';
+import { FREE_FILE_SIZE_LIMIT, PRO_FILE_SIZE_LIMIT } from '../types/user';
 
 export function useUsage() {
-  const { user } = useAuth();
+  const { user, isPro, loading } = useAuth();
 
   const checkUsage = useCallback(async (): Promise<UsageStats> => {
     if (user) {
@@ -26,5 +27,8 @@ export function useUsage() {
     }
   }, [user]);
 
-  return { checkUsage, recordUsage };
+  // File size limit based on plan - null while loading to prevent flash
+  const maxFileSize = loading ? null : (isPro ? PRO_FILE_SIZE_LIMIT : FREE_FILE_SIZE_LIMIT);
+
+  return { checkUsage, recordUsage, maxFileSize, isAuthLoading: loading };
 }

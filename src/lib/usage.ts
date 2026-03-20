@@ -1,8 +1,14 @@
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
 import { getVisitorId } from './fingerprint';
-import type { UsageStats } from '../types/user';
-import { FREE_LIMIT } from '../types/user';
+import type { UsageStats, UserPlan } from '../types/user';
+import { FREE_LIMIT, FREE_FILE_SIZE_LIMIT, PRO_FILE_SIZE_LIMIT } from '../types/user';
+
+export interface FileSizeCheck {
+  allowed: boolean;
+  maxSize: number;
+  plan: UserPlan;
+}
 
 function getToday(): string {
   return new Date().toISOString().split('T')[0];
@@ -115,5 +121,47 @@ export async function incrementFirestoreUsage(
     }
   } catch (error) {
     console.error('Failed to increment usage:', error);
+  }
+}
+
+// ============================================
+// File Size Limits
+// ============================================
+
+export async function checkFileSizeLimit(uid: string | null): Promise<FileSizeCheck> {
+  // Anonymous users get free limit
+  if (!uid) {
+    return {
+      allowed: true,
+      maxSize: FREE_FILE_SIZE_LIMIT,
+      plan: 'free',
+    };
+  }
+
+  try {
+    const snap = await getDoc(doc(db, 'users', uid));
+    if (!snap.exists()) {
+      return {
+        allowed: true,
+        maxSize: FREE_FILE_SIZE_LIMIT,
+        plan: 'free',
+      };
+    }
+
+    const data = snap.data();
+    const isPro = data.plan === 'pro';
+
+    return {
+      allowed: true,
+      maxSize: isPro ? PRO_FILE_SIZE_LIMIT : FREE_FILE_SIZE_LIMIT,
+      plan: isPro ? 'pro' : 'free',
+    };
+  } catch (error) {
+    console.error('Error checking file size limit:', error);
+    return {
+      allowed: true,
+      maxSize: FREE_FILE_SIZE_LIMIT,
+      plan: 'free',
+    };
   }
 }

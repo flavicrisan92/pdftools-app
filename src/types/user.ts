@@ -23,3 +23,13 @@ export interface UsageStats {
 
 export const FREE_LIMIT = 3;
 export const STORAGE_KEY = 'pdf_usage';
+
+// File size limits in bytes
+export const FREE_FILE_SIZE_LIMIT = 10 * 1024 * 1024; // 10MB
+export const PRO_FILE_SIZE_LIMIT = 100 * 1024 * 1024; // 100MB
+
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}

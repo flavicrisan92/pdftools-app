@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, LogOut, User, ChevronDown } from 'lucide-react';
+import { FileText, LogOut, User, ChevronDown, Crown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function Header() {
-  const { user, loading, signOut } = useAuth();
+  const { user, isPro, loading, signOut } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +45,9 @@ export function Header() {
             <Link to="/convert" className="text-gray-600 hover:text-primary-600 transition-colors">
               PDF to Image
             </Link>
+            <Link to="/image-to-pdf" className="text-gray-600 hover:text-primary-600 transition-colors">
+              Image to PDF
+            </Link>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -63,29 +66,49 @@ export function Header() {
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2 hover:bg-gray-100 rounded-lg px-3 py-2 transition-colors"
                 >
-                  {user.photoURL ? (
-                    <img
-                      src={user.photoURL}
-                      alt={user.displayName || 'User'}
-                      className="w-8 h-8 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-sm font-medium">
-                      {user.email?.charAt(0).toUpperCase() || 'U'}
-                    </div>
-                  )}
+                  <div className="relative">
+                    {user.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt={user.displayName || 'User'}
+                        className="w-8 h-8 rounded-full"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-sm font-medium">
+                        {user.email?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                    )}
+                    {isPro && (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
+                        <Crown className="w-2.5 h-2.5 text-white" />
+                      </div>
+                    )}
+                  </div>
                   <span className="hidden sm:block text-sm text-gray-700 max-w-[150px] truncate">
                     {user.displayName || user.email}
                   </span>
+                  {isPro && (
+                    <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">
+                      PRO
+                    </span>
+                  )}
                   <ChevronDown className="w-4 h-4 text-gray-500" />
                 </button>
 
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                     <div className="px-4 py-3 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {user.displayName || 'User'}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {user.displayName || 'User'}
+                        </p>
+                        {isPro && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                            <Crown className="w-3 h-3" />
+                            PRO
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-500 truncate">{user.email}</p>
                     </div>
                     <Link

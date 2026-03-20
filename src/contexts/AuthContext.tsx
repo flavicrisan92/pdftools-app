@@ -7,24 +7,29 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, googleProvider, db } from '../lib/firebase';
+import type { UserPlan } from '../types/user';
 
 interface AuthContextType {
   user: User | null;
+  userPlan: UserPlan;
+  isPro: boolean;
   loading: boolean;
   error: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-async function ensureUserDocument(user: User) {
+async function ensureUserDocument(user: User): Promise<UserPlan> {
   const userRef = doc(db, 'users', user.uid);
   const userDoc = await getDoc(userRef);
 
@@ -38,11 +43,15 @@ async function ensureUserDocument(user: User) {
       lastOperationDate: new Date().toISOString().split('T')[0],
       createdAt: new Date(),
     });
+    return 'free';
   }
+
+  return userDoc.data().plan || 'free';
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [userPlan, setUserPlan] = useState<UserPlan>('free');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,10 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(user);
       if (user) {
         try {
-          await ensureUserDocument(user);
+          const plan = await ensureUserDocument(user);
+          setUserPlan(plan);
         } catch (err) {
           console.error('Error ensuring user document:', err);
         }
+      } else {
+        setUserPlan('free');
       }
       setLoading(false);
     });
@@ -66,7 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       const result = await signInWithPopup(auth, googleProvider);
-      await ensureUserDocument(result.user);
+      const plan = await ensureUserDocument(result.user);
+      setUserPlan(plan);
     } catch (err) {
       setError(getErrorMessage(err));
       throw err;
@@ -77,7 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       const result = await signInWithEmailAndPassword(auth, email, password);
-      await ensureUserDocument(result.user);
+      const plan = await ensureUserDocument(result.user);
+      setUserPlan(plan);
     } catch (err) {
       setError(getErrorMessage(err));
       throw err;
@@ -88,7 +102,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      await ensureUserDocument(result.user);
+      const plan = await ensureUserDocument(result.user);
+      setUserPlan(plan);
     } catch (err) {
       setError(getErrorMessage(err));
       throw err;
@@ -99,6 +114,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       await firebaseSignOut(auth);
+      setUserPlan('free');
+    } catch (err) {
+      setError(getErrorMessage(err));
+      throw err;
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      setError(null);
+      await sendPasswordResetEmail(auth, email);
     } catch (err) {
       setError(getErrorMessage(err));
       throw err;
@@ -109,12 +135,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = {
     user,
+    userPlan,
+    isPro: userPlan === 'pro',
     loading,
     error,
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
     signOut,
+    resetPassword,
     clearError,
   };
 

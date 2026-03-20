@@ -45,7 +45,20 @@
       "Bash(node -e:*)",
       "Bash(start \"\" \"C:\\\\Users\\\\flavi\\\\source\\\\repos\\\\app1\\\\test-pdfs\\\\test-compressed.pdf\")",
       "Bash(start \"\" \"C:\\\\Users\\\\flavi\\\\Downloads\\\\compress-test-node.pdf\")",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(gcloud projects add-iam-policy-binding:*)",
+      "Bash(npm run build:staging:*)",
+      "Bash(npm run)",
+      "Bash(findstr:*)",
+      "Bash(npx firebase deploy:*)",
+      "Bash(git reset:*)",
+      "Bash(curl:*)",
+      "Bash(npx firebase:*)",
+      "Bash(gcloud functions add-iam-policy-binding:*)",
+      "Bash(git push:*)",
+      "Bash(gcloud logging read:*)",
+      "Bash(timeout:*)",
+      "Bash(dir:*)"
     ]
   }
 }

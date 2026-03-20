@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FileDropzone } from '../components/ui/FileDropzone';
 import { Button } from '../components/ui/Button';
 import { UsageLimitModal } from '../components/ui/UsageLimitModal';
+import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
 import { pdfToImages, downloadAllImages } from '../lib/pdf/convert';
 import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download } from 'lucide-react';
@@ -17,10 +18,19 @@ export function ConvertPdf() {
   const [images, setImages] = useState<string[]>([]);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
+  const [showFileSizeModal, setShowFileSizeModal] = useState(false);
+  const [oversizedFile, setOversizedFile] = useState<{ size: number; maxSize: number } | null>(null);
 
-  const { checkUsage, recordUsage } = useUsage();
+  const { checkUsage, recordUsage, maxFileSize } = useUsage();
 
   const handleFilesSelected = (newFiles: File[]) => {
+    const file = newFiles[0];
+    // Check file size (skip if still loading auth)
+    if (file && maxFileSize !== null && file.size > maxFileSize) {
+      setOversizedFile({ size: file.size, maxSize: maxFileSize });
+      setShowFileSizeModal(true);
+      return;
+    }
     setFiles(newFiles.slice(0, 1));
     setImages([]);
   };
@@ -76,6 +86,7 @@ export function ConvertPdf() {
           files={files}
           onRemoveFile={handleRemoveFile}
           multiple={false}
+          maxSize={maxFileSize}
         />
 
         {files.length > 0 && (
@@ -175,6 +186,13 @@ export function ConvertPdf() {
         onClose={() => setShowLimitModal(false)}
         used={usageCount}
         limit={FREE_LIMIT}
+      />
+
+      <FileSizeLimitModal
+        isOpen={showFileSizeModal}
+        onClose={() => setShowFileSizeModal(false)}
+        fileSize={oversizedFile?.size || 0}
+        maxSize={oversizedFile?.maxSize || maxFileSize}
       />
     </div>
   );

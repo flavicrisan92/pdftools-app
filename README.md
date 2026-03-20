@@ -18,29 +18,36 @@ O aplicatie PDF Tools (clone Smallpdf/iLovePDF) pentru Web, Android si iOS cu un
 | Setup React + Vite + TypeScript | Done | Proiect initializat |
 | Tailwind CSS v4 | Done | Cu @tailwindcss/postcss |
 | Firebase Setup | Done | 2 proiecte: staging + prod |
-| PDF Merge | Done | src/lib/pdf/merge.ts |
-| PDF Split | Done | src/lib/pdf/split.ts |
+| PDF Merge | Done | src/lib/pdf/merge.ts + preview thumbnails |
+| PDF Split | Done | src/lib/pdf/split.ts + page selector vizual |
 | PDF Compress | Done | src/lib/pdf/compress.ts |
 | PDF to Images | Done | src/lib/pdf/convert.ts |
-| UI Components | Done | FileDropzone, Button, etc. |
-| Pages | Done | Home, MergePdf, SplitPdf, CompressPdf, ConvertPdf |
+| Image to PDF | Done | src/lib/pdf/imageToPdf.ts |
+| PDF Thumbnails | Done | src/lib/pdf/thumbnail.ts |
+| UI Components | Done | FileDropzone, Button, SortableFileList, PageSelector |
+| Pages | Done | Home, MergePdf, SplitPdf, CompressPdf, ConvertPdf, ImageToPdf |
 | Capacitor Android | Done | android/ folder generat |
 | Firebase Hosting | Done | Deploy pe ambele environments |
 | GitHub Repo | Done | Push initial complet |
-
-| Firebase Auth | Done | Email/Password + Google |
+| Firebase Auth | Done | Email/Password + Google + Forgot Password |
 | CI/CD Pipeline | Done | GitHub Actions |
 | Usage Tracking | Done | FingerprintJS + Firestore |
+| Stripe Integration | Done | Checkout + webhooks |
+| Pricing Page | Done | Free vs Pro comparison |
+| Account Page | Done | Subscription status + cancel |
+| Mobile UX | Done | Homepage optimizat pentru conversie |
+| Legal Pages | Done | Privacy Policy, Terms of Service, Contact |
+| File Size Limit | Done | 10MB free, 100MB pro |
+| Pro Badge in Header | Done | Crown icon + PRO badge pentru useri premium |
+| Favicon Custom | Done | PDF document icon mov |
+| SEO Meta Tags | Done | Description, Open Graph, Twitter cards |
 
 ### In Progress / TODO
 
 | Task | Prioritate | Detalii |
 |------|------------|---------|
-| Stripe Integration | HIGH | Payments pentru Pro |
-| Premium Feature Gating | MEDIUM | File size limit (10MB free, 100MB pro) |
 | Android APK Build | MEDIUM | Capacitor build |
 | iOS Build | LOW | Necesita Mac |
-| SEO Optimization | LOW | Meta tags, sitemap |
 | Google Ads Setup | LOW | Marketing |
 
 ---
@@ -73,7 +80,10 @@ app1/
 │   │   └── ui/
 │   │       ├── Button.tsx
 │   │       ├── FileDropzone.tsx
-│   │       └── UsageLimitModal.tsx    # Modal upgrade
+│   │       ├── UsageLimitModal.tsx    # Modal upgrade
+│   │       ├── PdfThumbnail.tsx       # PDF page preview
+│   │       ├── SortableFileList.tsx   # Drag-drop file list
+│   │       └── PageSelector.tsx       # Visual page selector
 │   ├── contexts/
 │   │   └── AuthContext.tsx            # Firebase Auth context
 │   ├── hooks/
@@ -83,23 +93,33 @@ app1/
 │   │   │   ├── merge.ts
 │   │   │   ├── split.ts
 │   │   │   ├── compress.ts
-│   │   │   └── convert.ts
+│   │   │   ├── convert.ts
+│   │   │   ├── thumbnail.ts           # PDF thumbnail generator
+│   │   │   └── imageToPdf.ts          # Image to PDF conversion
 │   │   ├── firebase.ts
 │   │   ├── fingerprint.ts             # FingerprintJS wrapper
+│   │   ├── stripe.ts                  # Stripe integration
 │   │   └── usage.ts                   # Usage tracking logic
 │   ├── pages/
-│   │   ├── Home.tsx
-│   │   ├── Login.tsx
-│   │   ├── MergePdf.tsx
-│   │   ├── SplitPdf.tsx
+│   │   ├── Home.tsx                   # Mobile + Desktop layouts
+│   │   ├── Login.tsx                  # Auth + Forgot Password
+│   │   ├── Account.tsx                # Subscription management
+│   │   ├── Pricing.tsx                # Free vs Pro
+│   │   ├── MergePdf.tsx               # Cu preview thumbnails
+│   │   ├── SplitPdf.tsx               # Cu page selector
 │   │   ├── CompressPdf.tsx
-│   │   └── ConvertPdf.tsx
+│   │   ├── ConvertPdf.tsx
+│   │   ├── ImageToPdf.tsx             # Image to PDF
+│   │   ├── PrivacyPolicy.tsx
+│   │   ├── TermsOfService.tsx
+│   │   └── Contact.tsx
 │   ├── types/
 │   │   └── user.ts                    # User types & constants
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── index.css
 ├── android/                 # Capacitor Android
+├── functions/               # Firebase Cloud Functions (Stripe webhooks)
 ├── test-pdfs/               # PDF-uri pentru testare
 ├── firestore.rules          # Firestore security rules
 ├── firebase.json

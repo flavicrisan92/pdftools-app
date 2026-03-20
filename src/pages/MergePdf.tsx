@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { FileDropzone } from '../components/ui/FileDropzone';
+import { SortableFileList } from '../components/ui/SortableFileList';
 import { Button } from '../components/ui/Button';
 import { UsageLimitModal } from '../components/ui/UsageLimitModal';
+import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
 import { mergePdfs, downloadPdf } from '../lib/pdf/merge';
 import { useUsage } from '../hooks/useUsage';
-import { Loader2, Download, ArrowUpDown } from 'lucide-react';
+import { Loader2, Download } from 'lucide-react';
 import { FREE_LIMIT } from '../types/user';
 
 export function MergePdf() {
@@ -13,10 +15,22 @@ export function MergePdf() {
   const [result, setResult] = useState<Uint8Array | null>(null);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
+  const [showFileSizeModal, setShowFileSizeModal] = useState(false);
+  const [oversizedFile, setOversizedFile] = useState<{ size: number; maxSize: number } | null>(null);
 
-  const { checkUsage, recordUsage } = useUsage();
+  const { checkUsage, recordUsage, maxFileSize } = useUsage();
 
-  const handleFilesSelected = (newFiles: File[]) => {
+  const handleFilesSelected = async (newFiles: File[]) => {
+    // Check file sizes (skip if still loading auth)
+    if (maxFileSize !== null) {
+      for (const file of newFiles) {
+        if (file.size > maxFileSize) {
+          setOversizedFile({ size: file.size, maxSize: maxFileSize });
+          setShowFileSizeModal(true);
+          return;
+        }
+      }
+    }
     setFiles((prev) => [...prev, ...newFiles]);
     setResult(null);
   };
@@ -26,18 +40,14 @@ export function MergePdf() {
     setResult(null);
   };
 
-  const handleClearAll = () => {
-    setFiles([]);
+  const handleReorder = (newFiles: File[]) => {
+    setFiles(newFiles);
     setResult(null);
   };
 
-  const moveFile = (index: number, direction: 'up' | 'down') => {
-    const newFiles = [...files];
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    if (newIndex >= 0 && newIndex < files.length) {
-      [newFiles[index], newFiles[newIndex]] = [newFiles[newIndex], newFiles[index]];
-      setFiles(newFiles);
-    }
+  const handleClearAll = () => {
+    setFiles([]);
+    setResult(null);
   };
 
   const handleMerge = async () => {
@@ -82,38 +92,31 @@ export function MergePdf() {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <FileDropzone
           onFilesSelected={handleFilesSelected}
-          files={files}
-          onRemoveFile={handleRemoveFile}
-          onClearAll={handleClearAll}
+          files={[]}
+          onRemoveFile={() => {}}
           multiple={true}
+          maxSize={maxFileSize}
         />
 
-        {files.length > 1 && (
-          <div className="mt-6 space-y-2">
-            <p className="text-sm text-gray-500 flex items-center gap-2">
-              <ArrowUpDown className="w-4 h-4" />
-              Drag files to reorder, or use arrows
-            </p>
-            {files.map((file, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 w-6">{index + 1}.</span>
-                <span className="flex-1 text-sm truncate">{file.name}</span>
-                <button
-                  onClick={() => moveFile(index, 'up')}
-                  disabled={index === 0}
-                  className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
-                >
-                  ↑
-                </button>
-                <button
-                  onClick={() => moveFile(index, 'down')}
-                  disabled={index === files.length - 1}
-                  className="p-1 hover:bg-gray-100 rounded disabled:opacity-30"
-                >
-                  ↓
-                </button>
-              </div>
-            ))}
+        {files.length > 0 && (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-700">
+                Selected Files ({files.length})
+              </h3>
+              <button
+                onClick={handleClearAll}
+                className="text-sm text-red-600 hover:text-red-700"
+              >
+                Clear all
+              </button>
+            </div>
+
+            <SortableFileList
+              files={files}
+              onReorder={handleReorder}
+              onRemove={handleRemoveFile}
+            />
           </div>
         )}
 
@@ -142,6 +145,12 @@ export function MergePdf() {
             )}
           </div>
         )}
+
+        {files.length === 1 && (
+          <p className="mt-4 text-center text-sm text-gray-500">
+            Add at least one more PDF to merge
+          </p>
+        )}
       </div>
 
       <UsageLimitModal
@@ -149,6 +158,13 @@ export function MergePdf() {
         onClose={() => setShowLimitModal(false)}
         used={usageCount}
         limit={FREE_LIMIT}
+      />
+
+      <FileSizeLimitModal
+        isOpen={showFileSizeModal}
+        onClose={() => setShowFileSizeModal(false)}
+        fileSize={oversizedFile?.size || 0}
+        maxSize={oversizedFile?.maxSize || maxFileSize}
       />
     </div>
   );

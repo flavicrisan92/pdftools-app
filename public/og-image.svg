@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed"/>
+      <stop offset="100%" style="stop-color:#5b21b6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Document icon -->
+  <g transform="translate(150, 165)">
+    <path d="M0 20C0 8.954 8.954 0 20 0H180L260 80V280C260 291.046 251.046 300 240 300H20C8.954 300 0 291.046 0 280V20Z" fill="white" fill-opacity="0.9"/>
+    <path d="M180 0L260 80H200C188.954 80 180 71.046 180 60V0Z" fill="white" fill-opacity="0.6"/>
+    <text x="130" y="200" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="#7c3aed" text-anchor="middle">PDF</text>
+  </g>
+
+  <!-- Title -->
+  <text x="500" y="280" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="white">PDF Tools</text>
+
+  <!-- Subtitle -->
+  <text x="500" y="360" font-family="Arial, sans-serif" font-size="36" fill="white" fill-opacity="0.9">Edit PDFs Online Free</text>
+
+  <!-- Features -->
+  <text x="500" y="440" font-family="Arial, sans-serif" font-size="28" fill="white" fill-opacity="0.7">Merge • Split • Compress • Convert</text>
+</svg>
