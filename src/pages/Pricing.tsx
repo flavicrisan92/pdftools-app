@@ -94,15 +94,20 @@ export function Pricing() {
   const [userPlan, setUserPlan] = useState<string | null>(null);
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>(null);
   const [checkingPlan, setCheckingPlan] = useState(true);
-  const [plans, setPlans] = useState<Plan[]>(buildPlans(0, 0));
+  // Fallback prices while loading or if API fails
+  const [plans, setPlans] = useState<Plan[]>(buildPlans(8.99, 59.99));
 
   // Fetch prices from Stripe
   useEffect(() => {
     async function loadPrices() {
       const stripePrices = await fetchStripePrices();
-      const monthly = stripePrices.find(p => p.interval === 'month');
-      const annual = stripePrices.find(p => p.interval === 'year');
-      setPlans(buildPlans(monthly?.amount || 0, annual?.amount || 0));
+      if (stripePrices.length > 0) {
+        const monthly = stripePrices.find(p => p.interval === 'month');
+        const annual = stripePrices.find(p => p.interval === 'year');
+        if (monthly || annual) {
+          setPlans(buildPlans(monthly?.amount || 8.99, annual?.amount || 59.99));
+        }
+      }
     }
     loadPrices();
   }, []);
