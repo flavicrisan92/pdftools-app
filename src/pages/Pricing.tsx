@@ -212,13 +212,9 @@ export function Pricing() {
       {/* Hero Section */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 py-12 md:py-16 text-center">
-          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-6">
             Unlock Unlimited PDF Power
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 mb-6 max-w-2xl mx-auto">
-            Join thousands of users who save hours every week with our Pro tools.
-            No limits, no watermarks, just results.
-          </p>
           <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
             <span className="flex items-center gap-1">
               <Shield className="w-4 h-4 text-green-500" />
