@@ -29,7 +29,9 @@ export const createCheckoutSession = onRequest(
         return;
       }
 
-      const stripe = new Stripe(stripeSecretKey.value());
+      const stripe = new Stripe(stripeSecretKey.value(), {
+        apiVersion: '2023-10-16',
+      });
 
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
@@ -67,7 +69,9 @@ export const stripeWebhook = onRequest(
   },
   async (req, res) => {
     const sig = req.headers['stripe-signature'] as string;
-    const stripe = new Stripe(stripeSecretKey.value());
+    const stripe = new Stripe(stripeSecretKey.value(), {
+      apiVersion: '2023-10-16',
+    });
 
     let event: Stripe.Event;
 
