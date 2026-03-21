@@ -11,7 +11,7 @@ export function TermsOfService() {
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
           <p className="text-gray-600 mb-4">
-            By accessing and using PDF Tools, you agree to be bound by these Terms of Service.
+            By accessing and using OriPDF, you agree to be bound by these Terms of Service.
             If you do not agree to these terms, please do not use our service.
           </p>
         </section>
@@ -19,8 +19,8 @@ export function TermsOfService() {
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">2. Description of Service</h2>
           <p className="text-gray-600 mb-4">
-            PDF Tools provides browser-based PDF manipulation tools including merging, splitting,
-            compressing, and converting PDF files. All processing occurs locally in your browser.
+            OriPDF provides PDF manipulation tools including merging, splitting,
+            compressing, and converting PDF files.
           </p>
         </section>
 
@@ -46,7 +46,7 @@ export function TermsOfService() {
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">5. Acceptable Use</h2>
           <p className="text-gray-600 mb-4">
-            You agree not to use PDF Tools to:
+            You agree not to use OriPDF to:
           </p>
           <ul className="list-disc list-inside text-gray-600 space-y-2 mb-4">
             <li>Process illegal or unauthorized content</li>
@@ -59,7 +59,7 @@ export function TermsOfService() {
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">6. Intellectual Property</h2>
           <p className="text-gray-600 mb-4">
-            PDF Tools and its original content, features, and functionality are owned by us
+            OriPDF and its original content, features, and functionality are owned by us
             and are protected by international copyright, trademark, and other intellectual
             property laws.
           </p>
@@ -68,7 +68,7 @@ export function TermsOfService() {
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">7. Disclaimer of Warranties</h2>
           <p className="text-gray-600 mb-4">
-            PDF Tools is provided "as is" without warranties of any kind. We do not guarantee
+            OriPDF is provided "as is" without warranties of any kind. We do not guarantee
             that the service will be uninterrupted, secure, or error-free.
           </p>
         </section>

@@ -214,7 +214,7 @@ export function Account() {
 
       {/* Quick Links */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">PDF Tools</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">OriPDF Tools</h2>
         <div className="grid grid-cols-2 gap-3">
           <Button variant="outline" onClick={() => navigate('/merge')}>
             Merge PDFs

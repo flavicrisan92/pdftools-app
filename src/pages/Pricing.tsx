@@ -341,7 +341,7 @@ export function Pricing() {
           </span>
           <span className="flex items-center gap-2">
             <Zap className="w-5 h-5" />
-            Files processed locally
+            Fast processing
           </span>
         </div>
       </div>
@@ -358,8 +358,8 @@ export function Pricing() {
                 Is my data secure?
               </h3>
               <p className="text-gray-600 mt-2">
-                Absolutely! All PDF processing happens directly in your browser.
-                Your files never leave your device or get uploaded to any server.
+                Absolutely! We use industry-standard security measures to protect your data.
+                Your files are handled securely throughout the process.
               </p>
             </div>
             <div className="border-b border-gray-100 pb-6">
@@ -385,7 +385,7 @@ export function Pricing() {
                 Do I need to install anything?
               </h3>
               <p className="text-gray-600 mt-2">
-                No installation required! PDF Tools works entirely in your browser
+                No installation required! OriPDF works entirely in your browser
                 on any device - desktop, tablet, or mobile.
               </p>
             </div>

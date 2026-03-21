@@ -29,7 +29,7 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center gap-2">
             <FileText className="w-8 h-8 text-primary-600" />
-            <span className="text-xl font-bold text-gray-900">PDF Tools</span>
+            <span className="text-xl font-bold text-gray-900">OriPDF</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">

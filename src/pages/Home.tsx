@@ -58,7 +58,7 @@ export function Home() {
             Edit PDFs Instantly
           </h1>
           <p className="text-gray-500 text-sm">
-            Free. Secure. No upload needed.
+            Free. Fast. Secure.
           </p>
         </div>
 
@@ -107,16 +107,16 @@ export function Home() {
         <div className="flex-1 flex items-center justify-center px-4">
           <div className="flex justify-around w-full text-center">
             <div className="flex flex-col items-center">
-              <Lock className="w-5 h-5 text-green-600 mb-1" />
-              <span className="text-xs text-gray-500">100% Private</span>
-            </div>
-            <div className="flex flex-col items-center">
               <Zap className="w-5 h-5 text-yellow-600 mb-1" />
-              <span className="text-xs text-gray-500">Instant</span>
+              <span className="text-xs text-gray-500">Fast</span>
             </div>
             <div className="flex flex-col items-center">
               <Shield className="w-5 h-5 text-blue-600 mb-1" />
-              <span className="text-xs text-gray-500">No Upload</span>
+              <span className="text-xs text-gray-500">Secure</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <Lock className="w-5 h-5 text-green-600 mb-1" />
+              <span className="text-xs text-gray-500">Free</span>
             </div>
           </div>
         </div>
@@ -127,26 +127,26 @@ export function Home() {
         {/* Hero */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
-            PDF Tools That Just Work
+            OriPDF - Tools That Just Work
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
             Merge, split, compress and convert PDFs instantly.
-            Everything runs in your browser — your files never leave your device.
+            Fast, secure, and easy to use.
           </p>
 
           {/* Trust badges inline */}
           <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
-            <div className="flex items-center gap-1.5">
-              <Lock className="w-4 h-4 text-green-600" />
-              <span>100% Private</span>
-            </div>
             <div className="flex items-center gap-1.5">
               <Zap className="w-4 h-4 text-yellow-600" />
               <span>Lightning Fast</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Shield className="w-4 h-4 text-blue-600" />
-              <span>No Upload Required</span>
+              <span>Secure</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Lock className="w-4 h-4 text-green-600" />
+              <span>Free to Use</span>
             </div>
           </div>
         </div>

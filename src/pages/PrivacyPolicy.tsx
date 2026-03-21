@@ -11,9 +11,8 @@ export function PrivacyPolicy() {
         <section className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Privacy Matters</h2>
           <p className="text-gray-600 mb-4">
-            PDF Tools is designed with privacy as a core principle. All PDF processing happens
-            directly in your browser — your files never leave your device and are never uploaded
-            to our servers.
+            OriPDF is designed with privacy and security as core principles. We take appropriate
+            measures to protect your data and ensure secure processing of your files.
           </p>
         </section>
 
