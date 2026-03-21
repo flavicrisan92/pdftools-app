@@ -43,7 +43,7 @@ export function UsageLimitModal({ isOpen, onClose, used, limit }: UsageLimitModa
           <div className="space-y-3">
             <Link to="/pricing" className="block">
               <Button className="w-full" size="lg">
-                Upgrade to Pro - $7.99/mo
+                Upgrade to Pro
               </Button>
             </Link>
 

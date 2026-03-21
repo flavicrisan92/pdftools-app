@@ -416,7 +416,7 @@ export function Pricing() {
                   Processing...
                 </span>
               ) : (
-                'Get Pro - $7.99/mo'
+                'Get Pro Now'
               )}
             </Button>
             <Button
