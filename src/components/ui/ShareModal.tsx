@@ -11,8 +11,11 @@ interface ShareModalProps {
 const SHARE_URL = 'https://oripdf.com';
 const SHARE_TEXT = 'Free PDF tools that actually work - merge, split, compress PDFs online. No signup required!';
 
-export function ShareModal({ isOpen, onClose, toolName = 'PDF tool' }: ShareModalProps) {
+export function ShareModal({ isOpen, onClose, toolName }: ShareModalProps) {
   const [copied, setCopied] = useState(false);
+
+  // Using toolName for potential future customization
+  const successMessage = toolName ? `Your ${toolName} download is complete!` : 'Download Complete!';
 
   if (!isOpen) return null;
 
@@ -61,7 +64,7 @@ export function ShareModal({ isOpen, onClose, toolName = 'PDF tool' }: ShareModa
           </div>
 
           <h2 className="text-xl font-bold text-gray-900 mb-2">
-            Download Complete!
+            {successMessage}
           </h2>
 
           <p className="text-gray-600 mb-6">
