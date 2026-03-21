@@ -4,6 +4,7 @@ import { PageSelector } from '../components/ui/PageSelector';
 import { Button } from '../components/ui/Button';
 import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
+import { ShareModal } from '../components/ui/ShareModal';
 import { splitPdf, extractAllPages } from '../lib/pdf/split';
 import { downloadPdf } from '../lib/pdf/merge';
 import { useUsage } from '../hooks/useUsage';
@@ -20,6 +21,7 @@ export function SplitPdf() {
   const [usageCount, setUsageCount] = useState(0);
   const [showFileSizeModal, setShowFileSizeModal] = useState(false);
   const [oversizedFile, setOversizedFile] = useState<{ size: number; maxSize: number } | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
 
@@ -90,12 +92,14 @@ export function SplitPdf() {
         const splitResult = await splitPdf(files[0], { pageRanges: pageRange });
         await recordUsage();
         downloadPdf(splitResult, 'extracted-pages.pdf');
+        setShowShareModal(true);
       } else if (mode === 'all') {
         const pages = await extractAllPages(files[0]);
         await recordUsage();
         pages.forEach((page, index) => {
           downloadPdf(page, `page_${index + 1}.pdf`);
         });
+        setShowShareModal(true);
       }
     } catch (error) {
       console.error('Error splitting PDF:', error);
@@ -217,6 +221,12 @@ export function SplitPdf() {
         onClose={() => setShowFileSizeModal(false)}
         fileSize={oversizedFile?.size || 0}
         maxSize={oversizedFile?.maxSize || 0}
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        toolName="Split PDF"
       />
     </div>
   );

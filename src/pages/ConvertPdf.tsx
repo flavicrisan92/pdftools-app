@@ -3,6 +3,7 @@ import { FileDropzone } from '../components/ui/FileDropzone';
 import { Button } from '../components/ui/Button';
 import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
+import { ShareModal } from '../components/ui/ShareModal';
 import { pdfToImages, downloadAllImages } from '../lib/pdf/convert';
 import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download } from 'lucide-react';
@@ -19,6 +20,7 @@ export function ConvertPdf() {
   const [usageCount, setUsageCount] = useState(0);
   const [showFileSizeModal, setShowFileSizeModal] = useState(false);
   const [oversizedFile, setOversizedFile] = useState<{ size: number; maxSize: number } | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
 
@@ -58,6 +60,7 @@ export function ConvertPdf() {
       await recordUsage();
       const baseName = files[0].name.replace('.pdf', '');
       await downloadAllImages(convertedImages, baseName, format);
+      setShowShareModal(true);
     } catch (error) {
       console.error('Error converting PDF:', error);
       alert('Error converting PDF. Please try again.');
@@ -162,6 +165,12 @@ export function ConvertPdf() {
         onClose={() => setShowFileSizeModal(false)}
         fileSize={oversizedFile?.size || 0}
         maxSize={oversizedFile?.maxSize || 0}
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        toolName="PDF to Image"
       />
     </div>
   );

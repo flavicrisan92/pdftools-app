@@ -3,6 +3,7 @@ import { FileDropzone } from '../components/ui/FileDropzone';
 import { Button } from '../components/ui/Button';
 import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
+import { ShareModal } from '../components/ui/ShareModal';
 import { compressPdf, formatFileSize, calculateCompressionRatio } from '../lib/pdf/compress';
 import { downloadPdf } from '../lib/pdf/merge';
 import { useUsage } from '../hooks/useUsage';
@@ -17,6 +18,7 @@ export function CompressPdf() {
   const [usageCount, setUsageCount] = useState(0);
   const [showFileSizeModal, setShowFileSizeModal] = useState(false);
   const [oversizedFile, setOversizedFile] = useState<{ size: number; maxSize: number } | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
 
@@ -57,6 +59,7 @@ export function CompressPdf() {
       });
       await recordUsage();
       downloadPdf(compressed, `compressed_${files[0].name}`);
+      setShowShareModal(true);
     } catch (error) {
       console.error('Error compressing PDF:', error);
       alert('Error compressing PDF. Please try again.');
@@ -148,6 +151,12 @@ export function CompressPdf() {
         onClose={() => setShowFileSizeModal(false)}
         fileSize={oversizedFile?.size || 0}
         maxSize={oversizedFile?.maxSize || 0}
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        toolName="Compress PDF"
       />
     </div>
   );

@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Button } from '../components/ui/Button';
 import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
+import { ShareModal } from '../components/ui/ShareModal';
 import { imagesToPdf, downloadPdf } from '../lib/pdf/imageToPdf';
 import type { PageSize, Orientation, Margin } from '../lib/pdf/imageToPdf';
 import { useUsage } from '../hooks/useUsage';
@@ -25,6 +26,7 @@ export function ImageToPdf() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [showFileSizeModal, setShowFileSizeModal] = useState(false);
   const [oversizedFile, setOversizedFile] = useState<{ size: number; maxSize: number } | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
@@ -131,6 +133,7 @@ export function ImageToPdf() {
       await recordUsage();
       // Download directly
       downloadPdf(pdfBytes, 'images.pdf');
+      setShowShareModal(true);
     } catch (error) {
       console.error('Error converting images:', error);
       alert('Error converting images to PDF. Please try again.');
@@ -348,6 +351,12 @@ export function ImageToPdf() {
         onClose={() => setShowFileSizeModal(false)}
         fileSize={oversizedFile?.size || 0}
         maxSize={oversizedFile?.maxSize || 0}
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        toolName="Image to PDF"
       />
     </div>
   );

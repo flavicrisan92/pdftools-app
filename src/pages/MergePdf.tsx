@@ -4,6 +4,7 @@ import { SortableFileList } from '../components/ui/SortableFileList';
 import { Button } from '../components/ui/Button';
 import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
+import { ShareModal } from '../components/ui/ShareModal';
 import { mergePdfs, downloadPdf } from '../lib/pdf/merge';
 import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download } from 'lucide-react';
@@ -16,6 +17,7 @@ export function MergePdf() {
   const [usageCount, setUsageCount] = useState(0);
   const [showFileSizeModal, setShowFileSizeModal] = useState(false);
   const [oversizedFile, setOversizedFile] = useState<{ size: number; maxSize: number } | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
 
@@ -61,6 +63,7 @@ export function MergePdf() {
       const mergedPdf = await mergePdfs(files);
       await recordUsage();
       downloadPdf(mergedPdf, 'merged.pdf');
+      setShowShareModal(true);
     } catch (error) {
       console.error('Error merging PDFs:', error);
       alert('Error merging PDFs. Please try again.');
@@ -150,6 +153,12 @@ export function MergePdf() {
         onClose={() => setShowFileSizeModal(false)}
         fileSize={oversizedFile?.size || 0}
         maxSize={oversizedFile?.maxSize || 0}
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        toolName="Merge PDF"
       />
     </div>
   );

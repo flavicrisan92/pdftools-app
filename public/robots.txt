@@ -1,0 +1,12 @@
+# robots.txt for OriPDF.com
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://oripdf.com/sitemap.xml
+
+# Disallow sensitive paths
+Disallow: /api/
+Disallow: /account
+Disallow: /login
