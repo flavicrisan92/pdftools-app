@@ -4,6 +4,7 @@ import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
 import { ShareModal } from '../components/ui/ShareModal';
 import { imagesToPdf, downloadPdf } from '../lib/pdf/imageToPdf';
+import { useAuth } from '../contexts/AuthContext';
 import type { PageSize, Orientation, Margin } from '../lib/pdf/imageToPdf';
 import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download, Upload, GripVertical, X } from 'lucide-react';
@@ -30,6 +31,13 @@ export function ImageToPdf() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
+  const { user } = useAuth();
+
+  // Show share modal randomly (20% chance) for anonymous users only
+  const shouldShowShareModal = () => {
+    if (user) return false;
+    return Math.random() < 0.2;
+  };
 
   const handleFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -133,7 +141,9 @@ export function ImageToPdf() {
       await recordUsage();
       // Download directly
       downloadPdf(pdfBytes, 'images.pdf');
-      setShowShareModal(true);
+      if (shouldShowShareModal()) {
+        setShowShareModal(true);
+      }
     } catch (error) {
       console.error('Error converting images:', error);
       alert('Error converting images to PDF. Please try again.');

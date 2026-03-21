@@ -5,6 +5,7 @@ import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
 import { ShareModal } from '../components/ui/ShareModal';
 import { pdfToImages, downloadAllImages } from '../lib/pdf/convert';
+import { useAuth } from '../contexts/AuthContext';
 import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download } from 'lucide-react';
 import { FREE_LIMIT } from '../types/user';
@@ -23,16 +24,21 @@ export function ConvertPdf() {
   const [showShareModal, setShowShareModal] = useState(false);
 
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
+  const { user } = useAuth();
+
+  // Show share modal randomly (20% chance) for anonymous users only
+  const shouldShowShareModal = () => {
+    if (user) return false;
+    return Math.random() < 0.2;
+  };
 
   const handleFilesSelected = (newFiles: File[]) => {
-    const file = newFiles[0];
-    // Check file size (skip if still loading auth)
-    if (file && maxFileSize !== null && file.size > maxFileSize) {
-      setOversizedFile({ size: file.size, maxSize: maxFileSize });
-      setShowFileSizeModal(true);
-      return;
-    }
     setFiles(newFiles.slice(0, 1));
+  };
+
+  const handleFileSizeError = (fileSize: number, maxSize: number) => {
+    setOversizedFile({ size: fileSize, maxSize });
+    setShowFileSizeModal(true);
   };
 
   const handleRemoveFile = () => {
@@ -60,7 +66,9 @@ export function ConvertPdf() {
       await recordUsage();
       const baseName = files[0].name.replace('.pdf', '');
       await downloadAllImages(convertedImages, baseName, format);
-      setShowShareModal(true);
+      if (shouldShowShareModal()) {
+        setShowShareModal(true);
+      }
     } catch (error) {
       console.error('Error converting PDF:', error);
       alert('Error converting PDF. Please try again.');
@@ -83,6 +91,7 @@ export function ConvertPdf() {
           onRemoveFile={handleRemoveFile}
           multiple={false}
           maxSize={maxFileSize}
+          onFileSizeError={handleFileSizeError}
         />
 
         {files.length > 0 && (

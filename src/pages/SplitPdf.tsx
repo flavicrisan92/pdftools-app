@@ -6,6 +6,7 @@ import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
 import { ShareModal } from '../components/ui/ShareModal';
 import { splitPdf, extractAllPages } from '../lib/pdf/split';
+import { useAuth } from '../contexts/AuthContext';
 import { downloadPdf } from '../lib/pdf/merge';
 import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download } from 'lucide-react';
@@ -24,6 +25,13 @@ export function SplitPdf() {
   const [showShareModal, setShowShareModal] = useState(false);
 
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
+  const { user } = useAuth();
+
+  // Show share modal randomly (20% chance) for anonymous users only
+  const shouldShowShareModal = () => {
+    if (user) return false;
+    return Math.random() < 0.2;
+  };
 
   // Sync selectedPages to pageRange input
   useEffect(() => {
@@ -57,16 +65,14 @@ export function SplitPdf() {
   }, [selectedPages]);
 
   const handleFilesSelected = (newFiles: File[]) => {
-    const file = newFiles[0];
-    // Check file size (skip if still loading auth)
-    if (file && maxFileSize !== null && file.size > maxFileSize) {
-      setOversizedFile({ size: file.size, maxSize: maxFileSize });
-      setShowFileSizeModal(true);
-      return;
-    }
     setFiles(newFiles.slice(0, 1));
     setSelectedPages([]);
     setPageRange('');
+  };
+
+  const handleFileSizeError = (fileSize: number, maxSize: number) => {
+    setOversizedFile({ size: fileSize, maxSize });
+    setShowFileSizeModal(true);
   };
 
   const handleRemoveFile = () => {
@@ -92,14 +98,18 @@ export function SplitPdf() {
         const splitResult = await splitPdf(files[0], { pageRanges: pageRange });
         await recordUsage();
         downloadPdf(splitResult, 'extracted-pages.pdf');
-        setShowShareModal(true);
+        if (shouldShowShareModal()) {
+          setShowShareModal(true);
+        }
       } else if (mode === 'all') {
         const pages = await extractAllPages(files[0]);
         await recordUsage();
         pages.forEach((page, index) => {
           downloadPdf(page, `page_${index + 1}.pdf`);
         });
-        setShowShareModal(true);
+        if (shouldShowShareModal()) {
+          setShowShareModal(true);
+        }
       }
     } catch (error) {
       console.error('Error splitting PDF:', error);
@@ -123,6 +133,7 @@ export function SplitPdf() {
           onRemoveFile={handleRemoveFile}
           multiple={false}
           maxSize={maxFileSize}
+          onFileSizeError={handleFileSizeError}
         />
 
         {files.length > 0 && (

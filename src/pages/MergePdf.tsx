@@ -6,6 +6,7 @@ import { UsageLimitModal } from '../components/ui/UsageLimitModal';
 import { FileSizeLimitModal } from '../components/ui/FileSizeLimitModal';
 import { ShareModal } from '../components/ui/ShareModal';
 import { mergePdfs, downloadPdf } from '../lib/pdf/merge';
+import { useAuth } from '../contexts/AuthContext';
 import { useUsage } from '../hooks/useUsage';
 import { Loader2, Download } from 'lucide-react';
 import { FREE_LIMIT } from '../types/user';
@@ -20,19 +21,21 @@ export function MergePdf() {
   const [showShareModal, setShowShareModal] = useState(false);
 
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
+  const { user } = useAuth();
+
+  // Show share modal randomly (20% chance) for anonymous users only
+  const shouldShowShareModal = () => {
+    if (user) return false; // Don't show for logged-in users
+    return Math.random() < 0.2; // 20% chance
+  };
 
   const handleFilesSelected = async (newFiles: File[]) => {
-    // Check file sizes (skip if still loading auth)
-    if (maxFileSize !== null) {
-      for (const file of newFiles) {
-        if (file.size > maxFileSize) {
-          setOversizedFile({ size: file.size, maxSize: maxFileSize });
-          setShowFileSizeModal(true);
-          return;
-        }
-      }
-    }
     setFiles((prev) => [...prev, ...newFiles]);
+  };
+
+  const handleFileSizeError = (fileSize: number, maxSize: number) => {
+    setOversizedFile({ size: fileSize, maxSize });
+    setShowFileSizeModal(true);
   };
 
   const handleRemoveFile = (index: number) => {
@@ -63,7 +66,9 @@ export function MergePdf() {
       const mergedPdf = await mergePdfs(files);
       await recordUsage();
       downloadPdf(mergedPdf, 'merged.pdf');
-      setShowShareModal(true);
+      if (shouldShowShareModal()) {
+        setShowShareModal(true);
+      }
     } catch (error) {
       console.error('Error merging PDFs:', error);
       alert('Error merging PDFs. Please try again.');
@@ -88,6 +93,7 @@ export function MergePdf() {
           onRemoveFile={() => {}}
           multiple={true}
           maxSize={maxFileSize}
+          onFileSizeError={handleFileSizeError}
         />
 
         {files.length > 0 && (

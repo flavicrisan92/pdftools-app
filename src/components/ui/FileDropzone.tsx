@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import type { Accept } from 'react-dropzone';
+import type { Accept, FileRejection } from 'react-dropzone';
 import { Upload, File, X } from 'lucide-react';
 
 interface FileDropzoneProps {
@@ -11,6 +11,7 @@ interface FileDropzoneProps {
   accept?: Accept;
   multiple?: boolean;
   maxSize?: number | null;
+  onFileSizeError?: (fileSize: number, maxSize: number) => void;
 }
 
 export function FileDropzone({
@@ -21,16 +22,33 @@ export function FileDropzone({
   accept = { 'application/pdf': ['.pdf'] },
   multiple = true,
   maxSize = null,
+  onFileSizeError,
 }: FileDropzoneProps) {
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      onFilesSelected(acceptedFiles);
+      if (acceptedFiles.length > 0) {
+        onFilesSelected(acceptedFiles);
+      }
     },
     [onFilesSelected]
   );
 
+  const onDropRejected = useCallback(
+    (rejectedFiles: FileRejection[]) => {
+      // Check if any file was rejected due to size
+      const oversizedFile = rejectedFiles.find((r) =>
+        r.errors.some((e) => e.code === 'file-too-large')
+      );
+      if (oversizedFile && maxSize && onFileSizeError) {
+        onFileSizeError(oversizedFile.file.size, maxSize);
+      }
+    },
+    [maxSize, onFileSizeError]
+  );
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onDropRejected,
     accept,
     multiple,
     ...(maxSize && { maxSize }),
