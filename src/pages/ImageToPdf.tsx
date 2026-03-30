@@ -7,7 +7,7 @@ import { imagesToPdf, downloadPdf } from '../lib/pdf/imageToPdf';
 import { useAuth } from '../contexts/AuthContext';
 import type { PageSize, Orientation, Margin } from '../lib/pdf/imageToPdf';
 import { useUsage } from '../hooks/useUsage';
-import { Loader2, Download, Upload, GripVertical, X } from 'lucide-react';
+import { Loader2, Download, Upload, X, ChevronLeft, ChevronRight, Eye, ChevronUp, ChevronDown } from 'lucide-react';
 import { FREE_LIMIT } from '../types/user';
 
 interface ImageFile {
@@ -19,7 +19,7 @@ export function ImageToPdf() {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [pageSize, setPageSize] = useState<PageSize>('a4');
   const [orientation, setOrientation] = useState<Orientation>('auto');
-  const [margin, setMargin] = useState<Margin>('small');
+  const [margin, setMargin] = useState<Margin>('none');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
@@ -28,6 +28,7 @@ export function ImageToPdf() {
   const [showFileSizeModal, setShowFileSizeModal] = useState(false);
   const [oversizedFile, setOversizedFile] = useState<{ size: number; maxSize: number } | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
@@ -41,9 +42,9 @@ export function ImageToPdf() {
 
   const handleFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const imageFiles = files.filter((f) =>
-      ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(f.type)
-    );
+    const imageFiles = files
+      .filter((f) => ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(f.type))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
     // Check file sizes (skip if still loading auth)
     if (maxFileSize !== null) {
@@ -121,6 +122,20 @@ export function ImageToPdf() {
     setDragOverIndex(null);
   };
 
+  const moveUp = (index: number) => {
+    if (index === 0) return;
+    const newImages = [...images];
+    [newImages[index - 1], newImages[index]] = [newImages[index], newImages[index - 1]];
+    setImages(newImages);
+  };
+
+  const moveDown = (index: number) => {
+    if (index === images.length - 1) return;
+    const newImages = [...images];
+    [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]];
+    setImages(newImages);
+  };
+
   const handleConvert = async () => {
     if (images.length === 0) return;
 
@@ -139,8 +154,10 @@ export function ImageToPdf() {
         { pageSize, orientation, margin }
       );
       await recordUsage();
-      // Download directly
-      downloadPdf(pdfBytes, 'images.pdf');
+      // Generate filename with timestamp
+      const now = new Date();
+      const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+      downloadPdf(pdfBytes, `oripdf_${timestamp}.pdf`);
       if (shouldShowShareModal()) {
         setShowShareModal(true);
       }
@@ -199,7 +216,7 @@ export function ImageToPdf() {
               </button>
             </div>
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {images.map((image, index) => (
                 <div
                   key={index}
@@ -223,10 +240,10 @@ export function ImageToPdf() {
 
                   {/* Filename overlay */}
                   <div
-                    className="absolute bottom-0 left-0 right-0 bg-black/70 px-1.5 py-1"
+                    className="absolute bottom-0 left-0 right-0 bg-black/70 px-1.5 py-1.5"
                     title={image.file.name}
                   >
-                    <p className="text-white text-[10px] leading-tight overflow-hidden text-ellipsis whitespace-nowrap w-full text-left">
+                    <p className="text-white text-[9px] leading-tight break-all line-clamp-2 text-left">
                       {image.file.name}
                     </p>
                   </div>
@@ -236,15 +253,49 @@ export function ImageToPdf() {
                     {index + 1}
                   </div>
 
-                  {/* Drag handle */}
-                  <div className="absolute top-1 right-1 p-1 bg-black/50 rounded text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                    <GripVertical className="w-4 h-4" />
+                  {/* Reorder buttons (mobile friendly) */}
+                  <div className="absolute top-1 right-1 flex flex-col gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveUp(index);
+                      }}
+                      disabled={index === 0}
+                      className={`p-0.5 rounded text-white transition-colors ${
+                        index === 0 ? 'bg-black/30 cursor-not-allowed' : 'bg-black/50 hover:bg-black/70'
+                      }`}
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveDown(index);
+                      }}
+                      disabled={index === images.length - 1}
+                      className={`p-0.5 rounded text-white transition-colors ${
+                        index === images.length - 1 ? 'bg-black/30 cursor-not-allowed' : 'bg-black/50 hover:bg-black/70'
+                      }`}
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
                   </div>
+
+                  {/* Preview button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPreviewIndex(index);
+                    }}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2 bg-black/60 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
+                  >
+                    <Eye className="w-5 h-5" />
+                  </button>
 
                   {/* Remove button */}
                   <button
                     onClick={() => handleRemove(index)}
-                    className="absolute bottom-6 right-1 p-1 bg-red-500 rounded text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    className="absolute bottom-8 right-1 p-1 bg-red-500 rounded text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -310,10 +361,10 @@ export function ImageToPdf() {
                 </div>
               )}
 
-              {/* Margin */}
+              {/* Page Margin */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-2">
-                  Margin
+                  Page Margin
                 </label>
                 <div className="flex gap-2">
                   {(['none', 'small', 'medium'] as Margin[]).map((m) => (
@@ -378,6 +429,81 @@ export function ImageToPdf() {
         onClose={() => setShowShareModal(false)}
         toolName="Image to PDF"
       />
+
+      {/* Image Preview Modal */}
+      {previewIndex !== null && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+          onClick={() => setPreviewIndex(null)}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setPreviewIndex(null)}
+            className="absolute top-4 right-4 p-2 text-white hover:bg-white/20 rounded-full transition-colors"
+          >
+            <X className="w-8 h-8" />
+          </button>
+
+          {/* Previous button */}
+          {previewIndex > 0 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewIndex(previewIndex - 1);
+              }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-white hover:bg-white/20 rounded-full transition-colors"
+            >
+              <ChevronLeft className="w-10 h-10" />
+            </button>
+          )}
+
+          {/* PDF Page Preview */}
+          <div className="flex flex-col items-center" onClick={(e) => e.stopPropagation()}>
+            {/* Page simulation */}
+            <div
+              className="bg-white shadow-2xl flex items-center justify-center"
+              style={{
+                width: pageSize === 'fit' ? 'auto' : orientation === 'landscape' ? 'min(80vw, 600px)' : 'min(60vw, 400px)',
+                height: pageSize === 'fit' ? 'auto' : orientation === 'landscape' ? 'min(60vh, 400px)' : 'min(75vh, 550px)',
+                padding: margin === 'none' ? '0' : margin === 'small' ? '16px' : '32px',
+                maxWidth: '90vw',
+                maxHeight: '80vh',
+              }}
+            >
+              <img
+                src={images[previewIndex].preview}
+                alt={images[previewIndex].file.name}
+                className="max-w-full max-h-full object-contain"
+                style={{
+                  maxHeight: pageSize === 'fit' ? '75vh' : '100%',
+                }}
+              />
+            </div>
+            <p className="text-white mt-4 text-center">
+              {images[previewIndex].file.name}
+              <span className="text-white/60 ml-2">
+                ({previewIndex + 1} / {images.length})
+              </span>
+            </p>
+            <p className="text-white/50 text-sm mt-1">
+              {pageSize === 'fit' ? 'Fit to image' : pageSize.toUpperCase()} • {orientation} • {margin === 'none' ? 'no margin' : `${margin} margin`}
+            </p>
+          </div>
+
+          {/* Next button */}
+          {previewIndex < images.length - 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewIndex(previewIndex + 1);
+              }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white hover:bg-white/20 rounded-full transition-colors"
+            >
+              <ChevronRight className="w-10 h-10" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

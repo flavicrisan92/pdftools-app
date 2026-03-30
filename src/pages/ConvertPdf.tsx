@@ -82,8 +82,9 @@ export function ConvertPdf() {
 
   const handleDownload = async () => {
     if (convertedImages.length === 0) return;
-    const baseName = files[0].name.replace('.pdf', '');
-    await downloadAllImages(convertedImages, baseName, format);
+    const now = new Date();
+    const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+    await downloadAllImages(convertedImages, `oripdf_${timestamp}`, format);
     if (shouldShowShareModal()) {
       setShowShareModal(true);
     }

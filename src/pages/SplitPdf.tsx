@@ -93,11 +93,13 @@ export function SplitPdf() {
     }
 
     setIsProcessing(true);
+    const now = new Date();
+    const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
     try {
       if (mode === 'range' && pageRange) {
         const splitResult = await splitPdf(files[0], { pageRanges: pageRange });
         await recordUsage();
-        downloadPdf(splitResult, 'extracted-pages.pdf');
+        downloadPdf(splitResult, `oripdf_${timestamp}.pdf`);
         if (shouldShowShareModal()) {
           setShowShareModal(true);
         }
@@ -105,7 +107,7 @@ export function SplitPdf() {
         const pages = await extractAllPages(files[0]);
         await recordUsage();
         pages.forEach((page, index) => {
-          downloadPdf(page, `page_${index + 1}.pdf`);
+          downloadPdf(page, `oripdf_${timestamp}_page${index + 1}.pdf`);
         });
         if (shouldShowShareModal()) {
           setShowShareModal(true);
