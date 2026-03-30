@@ -104,7 +104,10 @@
 - [ ] Configure DNS records
 - [ ] SSL certificate (automatic via Firebase)
 
-### 3. Marketing Plan → $5,000/mo Target
+### 3. Sign Document Improvements
+- [ ] Fix signature preview vs final output mismatch - preview arată diferit față de rezultatul din "Sign & Download"
+
+### 4. Marketing Plan → $5,000/mo Target
 - [ ] Create comprehensive marketing strategy:
   - SEO & Content Marketing
   - Social Media Strategy
