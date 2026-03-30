@@ -8,6 +8,7 @@ import { SplitPdf } from './pages/SplitPdf';
 import { CompressPdf } from './pages/CompressPdf';
 import { ConvertPdf } from './pages/ConvertPdf';
 import { ImageToPdf } from './pages/ImageToPdf';
+import { SignPdf } from './pages/SignPdf';
 import { Pricing } from './pages/Pricing';
 import { Login } from './pages/Login';
 import { Account } from './pages/Account';
@@ -29,6 +30,7 @@ function App() {
             <Route path="/compress" element={<CompressPdf />} />
             <Route path="/convert" element={<ConvertPdf />} />
             <Route path="/image-to-pdf" element={<ImageToPdf />} />
+            <Route path="/sign" element={<SignPdf />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/account" element={<Account />} />

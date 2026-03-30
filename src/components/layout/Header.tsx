@@ -48,6 +48,9 @@ export function Header() {
             <Link to="/image-to-pdf" className="text-gray-600 hover:text-primary-600 transition-colors">
               Image to PDF
             </Link>
+            <Link to="/sign" className="text-gray-600 hover:text-primary-600 transition-colors">
+              Sign Document
+            </Link>
           </nav>
 
           <div className="flex items-center gap-4">

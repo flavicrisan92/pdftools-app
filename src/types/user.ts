@@ -11,6 +11,7 @@ export interface UserDocument {
   stripeCustomerId?: string;
   stripeSubscriptionId?: string;
   subscriptionStatus?: string;
+  signatureUrl?: string; // Base64 data URL for saved signature
   createdAt?: Date;
   updatedAt?: Date;
 }

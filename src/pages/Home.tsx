@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Merge, Scissors, Minimize2, Image, FileImage, Shield, Zap, Lock } from 'lucide-react';
+import { Merge, Scissors, Minimize2, Image, FileImage, PenTool, Shield, Zap, Lock } from 'lucide-react';
 
 const tools = [
   {
@@ -42,6 +42,14 @@ const tools = [
     color: 'bg-pink-500',
     popular: false,
   },
+  {
+    name: 'Sign Document',
+    description: 'Sign PDF, images, Word',
+    icon: PenTool,
+    path: '/sign',
+    color: 'bg-indigo-500',
+    popular: false,
+  },
 ];
 
 const popularTools = tools.filter(t => t.popular);
@@ -82,12 +90,12 @@ export function Home() {
           </div>
         </div>
 
-        {/* Secondary tools - 3 column grid */}
+        {/* Secondary tools - 2 column grid for 4 tools */}
         <div className="px-4 mb-8">
           <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-3">
             More Tools
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {otherTools.map((tool) => (
               <Link
                 key={tool.path}
@@ -151,8 +159,8 @@ export function Home() {
           </div>
         </div>
 
-        {/* Tools Grid - 5 columns */}
-        <div className="grid grid-cols-5 gap-4 mb-16">
+        {/* Tools Grid - 3 columns (2 rows of 3) */}
+        <div className="grid grid-cols-3 gap-4 mb-16">
           {tools.map((tool) => (
             <Link
               key={tool.path}

@@ -60,7 +60,11 @@
       "Bash(timeout:*)",
       "Bash(dir:*)",
       "Bash(git tag:*)",
-      "Bash(gcloud functions describe:*)"
+      "Bash(gcloud functions describe:*)",
+      "WebFetch(domain:postiz.com)",
+      "Skill(prod-deploy)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run type-check:*)"
     ]
   }
 }
