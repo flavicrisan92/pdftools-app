@@ -221,6 +221,16 @@ export function ImageToPdf() {
                     className="w-full aspect-square object-cover"
                   />
 
+                  {/* Filename overlay */}
+                  <div
+                    className="absolute bottom-0 left-0 right-0 bg-black/70 px-1.5 py-1"
+                    title={image.file.name}
+                  >
+                    <p className="text-white text-[10px] leading-tight overflow-hidden text-ellipsis whitespace-nowrap w-full text-left">
+                      {image.file.name}
+                    </p>
+                  </div>
+
                   {/* Order badge */}
                   <div className="absolute top-1 left-1 w-6 h-6 bg-primary-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
                     {index + 1}
@@ -234,7 +244,7 @@ export function ImageToPdf() {
                   {/* Remove button */}
                   <button
                     onClick={() => handleRemove(index)}
-                    className="absolute bottom-1 right-1 p-1 bg-red-500 rounded text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    className="absolute bottom-6 right-1 p-1 bg-red-500 rounded text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                   >
                     <X className="w-4 h-4" />
                   </button>

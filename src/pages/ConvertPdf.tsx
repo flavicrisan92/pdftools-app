@@ -7,7 +7,7 @@ import { ShareModal } from '../components/ui/ShareModal';
 import { pdfToImages, downloadAllImages } from '../lib/pdf/convert';
 import { useAuth } from '../contexts/AuthContext';
 import { useUsage } from '../hooks/useUsage';
-import { Loader2, Download } from 'lucide-react';
+import { Loader2, Download, Image, RefreshCw } from 'lucide-react';
 import { FREE_LIMIT } from '../types/user';
 
 type Format = 'png' | 'jpeg';
@@ -15,13 +15,15 @@ type Format = 'png' | 'jpeg';
 export function ConvertPdf() {
   const [files, setFiles] = useState<File[]>([]);
   const [format, setFormat] = useState<Format>('png');
-  const [quality, setQuality] = useState(0.9);
+  const [quality, setQuality] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showLimitModal, setShowLimitModal] = useState(false);
   const [usageCount, setUsageCount] = useState(0);
   const [showFileSizeModal, setShowFileSizeModal] = useState(false);
   const [oversizedFile, setOversizedFile] = useState<{ size: number; maxSize: number } | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [convertedImages, setConvertedImages] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState<number | null>(null);
 
   const { checkUsage, recordUsage, maxFileSize } = useUsage();
   const { user } = useAuth();
@@ -34,6 +36,8 @@ export function ConvertPdf() {
 
   const handleFilesSelected = (newFiles: File[]) => {
     setFiles(newFiles.slice(0, 1));
+    setConvertedImages([]);
+    setSelectedImage(null);
   };
 
   const handleFileSizeError = (fileSize: number, maxSize: number) => {
@@ -43,9 +47,11 @@ export function ConvertPdf() {
 
   const handleRemoveFile = () => {
     setFiles([]);
+    setConvertedImages([]);
+    setSelectedImage(null);
   };
 
-  const handleConvertAndDownload = async () => {
+  const handleConvert = async () => {
     if (files.length === 0) return;
 
     // Check usage limit
@@ -58,22 +64,28 @@ export function ConvertPdf() {
 
     setIsProcessing(true);
     try {
-      const convertedImages = await pdfToImages(files[0], {
+      const images = await pdfToImages(files[0], {
         format,
         quality,
         scale: 2,
       });
       await recordUsage();
-      const baseName = files[0].name.replace('.pdf', '');
-      await downloadAllImages(convertedImages, baseName, format);
-      if (shouldShowShareModal()) {
-        setShowShareModal(true);
-      }
+      setConvertedImages(images);
+      setSelectedImage(0);
     } catch (error) {
       console.error('Error converting PDF:', error);
       alert('Error converting PDF. Please try again.');
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (convertedImages.length === 0) return;
+    const baseName = files[0].name.replace('.pdf', '');
+    await downloadAllImages(convertedImages, baseName, format);
+    if (shouldShowShareModal()) {
+      setShowShareModal(true);
     }
   };
 
@@ -139,10 +151,11 @@ export function ConvertPdf() {
           </div>
         )}
 
-        {files.length > 0 && (
+        {/* Convert button - show when file selected but not yet converted */}
+        {files.length > 0 && convertedImages.length === 0 && (
           <div className="mt-6 flex justify-center">
             <Button
-              onClick={handleConvertAndDownload}
+              onClick={handleConvert}
               disabled={isProcessing}
               size="lg"
             >
@@ -153,11 +166,75 @@ export function ConvertPdf() {
                 </>
               ) : (
                 <>
-                  <Download className="w-5 h-5 mr-2" />
-                  Convert & Download
+                  <Image className="w-5 h-5 mr-2" />
+                  Convert to {format.toUpperCase()}
                 </>
               )}
             </Button>
+          </div>
+        )}
+
+        {/* Preview section - show after conversion */}
+        {convertedImages.length > 0 && (
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-700">
+                Converted Images ({convertedImages.length} {convertedImages.length === 1 ? 'page' : 'pages'})
+              </h3>
+              <button
+                onClick={handleRemoveFile}
+                className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Convert another
+              </button>
+            </div>
+
+            {/* Thumbnails */}
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              {convertedImages.map((img, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`relative aspect-[3/4] rounded-lg overflow-hidden border-2 transition-all ${
+                    selectedImage === index
+                      ? 'border-primary-500 ring-2 ring-primary-200'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <img
+                    src={img}
+                    alt={`Page ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-0.5 text-center">
+                    {index + 1}
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Large preview */}
+            {selectedImage !== null && (
+              <div className="border border-gray-200 rounded-lg p-2 bg-gray-50">
+                <img
+                  src={convertedImages[selectedImage]}
+                  alt={`Page ${selectedImage + 1}`}
+                  className="max-h-[400px] mx-auto object-contain"
+                />
+                <p className="text-center text-sm text-gray-500 mt-2">
+                  Page {selectedImage + 1} of {convertedImages.length}
+                </p>
+              </div>
+            )}
+
+            {/* Download button */}
+            <div className="flex justify-center">
+              <Button onClick={handleDownload} size="lg">
+                <Download className="w-5 h-5 mr-2" />
+                Download {convertedImages.length === 1 ? 'Image' : 'All Images (ZIP)'}
+              </Button>
+            </div>
           </div>
         )}
       </div>

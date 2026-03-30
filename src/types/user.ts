@@ -21,7 +21,7 @@ export interface UsageStats {
   canPerform: boolean;
 }
 
-export const FREE_LIMIT = 3;
+export const FREE_LIMIT = 10;
 export const STORAGE_KEY = 'pdf_usage';
 
 // File size limits in bytes
