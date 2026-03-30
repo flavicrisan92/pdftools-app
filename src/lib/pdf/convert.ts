@@ -1,4 +1,5 @@
 import * as pdfjs from 'pdfjs-dist';
+import JSZip from 'jszip';
 
 // Set worker source - use unpkg as fallback CDN
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -54,10 +55,32 @@ export async function downloadAllImages(
   baseFilename: string,
   format: 'png' | 'jpeg'
 ): Promise<void> {
+  // For single image, download directly
+  if (images.length === 1) {
+    const filename = `${baseFilename}.${format}`;
+    downloadImage(images[0], filename);
+    return;
+  }
+
+  // For multiple images, create a ZIP file
+  const zip = new JSZip();
+
   for (let i = 0; i < images.length; i++) {
     const filename = `${baseFilename}_page_${i + 1}.${format}`;
-    downloadImage(images[i], filename);
-    // Small delay between downloads
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Convert data URL to blob
+    const response = await fetch(images[i]);
+    const blob = await response.blob();
+    zip.file(filename, blob);
   }
+
+  // Generate and download ZIP
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const zipUrl = URL.createObjectURL(zipBlob);
+  const link = document.createElement('a');
+  link.href = zipUrl;
+  link.download = `${baseFilename}_images.zip`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(zipUrl);
 }
